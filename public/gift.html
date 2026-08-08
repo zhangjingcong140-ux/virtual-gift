@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>你收到一个包裹</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #2f3542; color: white; transition: background 0.5s;}
+        .gift-box { font-size: 80px; cursor: pointer; margin-top: 50px; transition: transform 0.3s; display: inline-block; }
+        .gift-box:hover { transform: scale(1.1) rotate(5deg); }
+        #content { display: none; margin-top: 30px; background: white; color: #333; padding: 30px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .error { color: #ff4757; margin-top: 50px; }
+    </style>
+</head>
+<body>
+    <div id="loading">正在寻找包裹...</div>
+    
+    <div id="gift-area" style="display: none;">
+        <h2>你收到一个神秘包裹！</h2>
+        <div class="gift-box" onclick="openGift()">🎁</div>
+        <p>点击包裹拆开</p>
+    </div>
+
+    <div id="content">
+        <h3 id="display-sender"></h3>
+        <p id="display-message" style="font-size: 20px; font-style: italic;"></p>
+    </div>
+
+    <script>
+        let giftData = null;
+        const urlParams = new URLSearchParams(window.location.search);
+        const giftId = urlParams.get('id');
+
+        if (!giftId) {
+            document.body.innerHTML = "<h2 class='error'>网址无效，没有找到包裹编号。</h2>";
+        } else {
+            fetch(`/api/unpack/${giftId}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+                    if (data.success) {
+                        giftData = data.data;
+                        document.getElementById('gift-area').style.display = 'block';
+                    } else {
+                        document.body.innerHTML = `<h2 class='error'>${data.message}</h2>`;
+                    }
+                });
+        }
+
+        function openGift() {
+            document.getElementById('gift-area').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+            document.body.style.background = giftData.boxColor;
+            document.getElementById('display-sender').innerText = `来自 ${giftData.senderName} 的留言：`;
+            document.getElementById('display-message').innerText = `"${giftData.message}"`;
+        }
+    </script>
+</body>
+</html>
