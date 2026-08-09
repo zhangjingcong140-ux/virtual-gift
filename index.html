@@ -42,10 +42,29 @@
             <textarea id="message" placeholder="填写备注，没有也可以"></textarea>
           </div>
           <div class="form-group">
+            <label>贺卡</label>
+            <div class="card-picker" id="cardPicker">
+              <button class="card-select-button" id="openCardPicker" type="button">
+                <img src="./card.png" alt="选择贺卡" />
+                <span>选择贺卡</span>
+              </button>
+              <div class="card-preview" id="cardPreview">
+                <img id="cardPreviewImg" src="./cards/card1.png" alt="贺卡预览" />
+                <div class="card-preview-text" id="cardPreviewText">贺卡内容会显示在这里，最多20个字。</div>
+              </div>
+              <div class="card-style-row" id="cardStyleRow"></div>
+              <textarea id="cardContent" maxlength="20" placeholder="写点寄语，不超过20字"></textarea>
+              <div class="card-footer">
+                <span id="cardCount">0/20</span>
+                <button class="btn small" id="placeCardBtn" type="button" disabled>放入包裹</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
             <label>小物件</label>
             <div class="item-list" id="itemList"></div>
           </div>
-          <p class="helper-text" id="helperText">请输入收件人，或至少选择一个小物件。</p>
+          <p class="helper-text" id="helperText">请输入收件人，或至少选择一个小物件/贺卡。</p>
 
           <div class="result-card" id="resultCard">
             <div class="result-title">包裹预览</div>
@@ -76,15 +95,25 @@
       inside: [] // items placed inside the box with positions {key,x,y}
     };
 
+    const cardTemplates = [
+      { key: 'card1', label: '贺卡样式一', image: './cards/card1.png' },
+      { key: 'card2', label: '贺卡样式二', image: './cards/card2.png' },
+      { key: 'card3', label: '贺卡样式三', image: './cards/card3.png' },
+      { key: 'card4', label: '贺卡样式四', image: './cards/card4.png' },
+      { key: 'card5', label: '贺卡样式五', image: './cards/card5.png' },
+      { key: 'card6', label: '贺卡样式六', image: './cards/card6.png' },
+      { key: 'card7', label: '贺卡样式七', image: './cards/card7.png' }
+    ];
+
     const itemDefinitions = [
       { key: 'rose', label: '玫瑰', image: './rose.png' },
       { key: 'bug', label: '虫子', image: './bug.png' },
       { key: 'shit', label: '大便', image: './shit.png' },
-      { key: 'card', label: '贺卡', image: './card.png' },
       { key: 'firefly', label: '萤火虫', image: './firefly.png' }
     ];
 
     const itemMap = Object.fromEntries(itemDefinitions.map((item) => [item.key, item]));
+    const cardMap = Object.fromEntries(cardTemplates.map((card) => [card.key, card]));
 
     const insideObjects = document.getElementById('insideObjects');
     const insideWrap = document.getElementById('insideWrap');
@@ -99,11 +128,22 @@
     const qrCodeImg = document.getElementById('qrCode');
     const buildBtn = document.getElementById('buildBtn');
     const helperText = document.getElementById('helperText');
+    const cardPicker = document.getElementById('cardPicker');
+    const openCardPicker = document.getElementById('openCardPicker');
+    const cardStyleRow = document.getElementById('cardStyleRow');
+    const cardPreviewImg = document.getElementById('cardPreviewImg');
+    const cardPreviewText = document.getElementById('cardPreviewText');
+    const cardContentInput = document.getElementById('cardContent');
+    const cardCount = document.getElementById('cardCount');
+    const placeCardBtn = document.getElementById('placeCardBtn');
   let hasGenerated = false;
+  let selectedCard = cardTemplates[0].key;
+  let cardContent = '';
+  let placedCard = null;
 
   function updateGenerateState() {
     const hasSender = senderInput.value.trim().length > 0;
-    const hasSelection = state.selected.length > 0 || state.inside.length > 0;
+    const hasSelection = state.selected.length > 0 || state.inside.length > 0 || !!placedCard;
     const canGenerate = hasSender || hasSelection;
     buildBtn.disabled = !canGenerate;
     helperText.textContent = canGenerate
@@ -112,6 +152,38 @@
     if (!hasGenerated) {
       shareUrlInput.value = '请先生成包裹后再显示链接';
       qrCodeImg.removeAttribute('src');
+    }
+  }
+
+  function renderCardPicker() {
+    if (!cardStyleRow) return;
+    if (!selectedCard) selectedCard = cardTemplates[0].key;
+    cardPreviewImg.src = cardMap[selectedCard].image;
+    cardStyleRow.innerHTML = cardTemplates.map((card) => `
+      <button class="card-style ${selectedCard === card.key ? 'active' : ''}" data-card="${card.key}" type="button">
+        <img src="${card.image}" alt="贺卡样式" />
+      </button>
+    `).join('');
+
+    Array.from(cardStyleRow.querySelectorAll('.card-style')).forEach((btn) => {
+      btn.addEventListener('click', () => {
+        selectedCard = btn.dataset.card;
+        cardPreviewImg.src = cardMap[selectedCard].image;
+        renderCardPicker();
+        updateCardState();
+      });
+    });
+  }
+
+  function updateCardState() {
+    cardContent = cardContentInput.value.trim().slice(0, 20);
+    cardCount.textContent = `${cardContent.length}/20`;
+    cardPreviewText.textContent = cardContent || '贺卡内容会显示在这里，最多20个字。';
+    placeCardBtn.disabled = !selectedCard || cardContent.length === 0 || !!placedCard;
+    if (placedCard) {
+      placeCardBtn.textContent = '已放入包裹';
+    } else {
+      placeCardBtn.textContent = '放入包裹';
     }
   }
 
@@ -151,28 +223,42 @@
       const recipient = recipientInput.value.trim();
       const message = messageInput.value.trim();
       const itemText = (state.inside.length ? state.inside.map(i => itemMap[i.key].label) : state.selected.map(i => itemMap[i].label)).join('、') || '还没有放入任何小物件';
-      resultText.innerHTML = `寄件人：${sender || '尚未填写'}<br/>收件人：${recipient || '尚未填写'}<br/>备注：${message || '可选'}<br/>包裹内物件：${itemText}`;
+      const cardText = placedCard ? `；已放入贺卡：${cardMap[placedCard.cardKey].label}` : '';
+      resultText.innerHTML = `寄件人：${sender || '尚未填写'}<br/>收件人：${recipient || '尚未填写'}<br/>备注：${message || '可选'}<br/>包裹内容：${itemText}${cardText}`;
       updateGenerateState();
     }
 
     function renderPlacedList() {
       if (!placedList) return;
-      placedList.innerHTML = state.inside.map((it, idx) => `
+      const rows = state.inside.map((it, idx) => `
         <div class="placed-row" data-idx="${idx}">
           <img src="${itemMap[it.key].image}" alt="${itemMap[it.key].label}" />
           <div class="label">${itemMap[it.key].label}</div>
           <button data-idx="${idx}" class="remove-btn">删除</button>
         </div>
       `).join('');
+      const cardRow = placedCard ? `
+        <div class="placed-row placed-card-row">
+          <img src="${cardMap[placedCard.cardKey].image}" alt="贺卡" />
+          <div class="label">贺卡：${cardMap[placedCard.cardKey].label}</div>
+          <button data-card="remove" class="remove-btn">删除</button>
+        </div>
+      ` : '';
+      placedList.innerHTML = rows + cardRow;
 
       Array.from(placedList.querySelectorAll('.remove-btn')).forEach((btn) => {
         btn.addEventListener('click', () => {
-          const idx = Number(btn.dataset.idx);
-          if (!Number.isFinite(idx)) return;
-          state.inside.splice(idx, 1);
+          if (btn.dataset.card === 'remove') {
+            placedCard = null;
+          } else {
+            const idx = Number(btn.dataset.idx);
+            if (!Number.isFinite(idx)) return;
+            state.inside.splice(idx, 1);
+          }
           renderObjects();
           renderPlacedList();
           createShareLink();
+          updateCardState();
         });
       });
     }
@@ -193,6 +279,10 @@
       if (recipient) url.searchParams.set('to', recipient);
       if (message) url.searchParams.set('m', message);
       if (items.length) url.searchParams.set('i', items.join(','));
+      if (placedCard) {
+        url.searchParams.set('card', placedCard.cardKey);
+        url.searchParams.set('cardText', placedCard.content);
+      }
 
       shareUrlInput.value = url.toString();
       qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url.toString())}`;
@@ -207,10 +297,35 @@
       });
     });
 
+    cardContentInput.addEventListener('input', () => {
+      if (cardContentInput.value.length > 20) {
+        cardContentInput.value = cardContentInput.value.slice(0, 20);
+      }
+      updateCardState();
+    });
+
+    placeCardBtn.addEventListener('click', () => {
+      if (!selectedCard || !cardContent || placedCard) return;
+      placedCard = { cardKey: selectedCard, content: cardContent };
+      selectedCard = null;
+      cardContentInput.value = '';
+      renderCardPicker();
+      updateCardState();
+      renderObjects();
+      renderPlacedList();
+      if (hasGenerated) createShareLink();
+    });
+
+    if (openCardPicker) {
+      openCardPicker.addEventListener('click', () => {
+        cardPicker.classList.toggle('active');
+      });
+    }
+
     document.getElementById('buildBtn').addEventListener('click', () => {
       const sender = senderInput.value.trim();
       const hasSender = sender.length > 0;
-      const hasSelection = state.selected.length > 0 || state.inside.length > 0;
+      const hasSelection = state.selected.length > 0 || state.inside.length > 0 || !!placedCard;
       if (!hasSender && !hasSelection) return;
       hasGenerated = true;
       if (innerBox) {
@@ -263,6 +378,8 @@
       renderPlacedList();
       createShareLink();
     });
+    renderCardPicker();
+    updateCardState();
     renderItemButtons();
     renderObjects();
     renderPlacedList();

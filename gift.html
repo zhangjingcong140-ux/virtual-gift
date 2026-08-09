@@ -89,6 +89,51 @@
       transform: translate(0, 0) scale(1);
     }
     .item-chip img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .card-detail {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 18px;
+      background: #fff7fb;
+      border: 1px dashed #e8d0dc;
+      text-align: center;
+    }
+    .card-note {
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 1.4em;
+    }
+    .card-view {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+      margin-top: 10px;
+    }
+    .card-view.hidden {
+      display: none;
+    }
+    .card-view img {
+      width: 140px;
+      border-radius: 16px;
+      object-fit: contain;
+    }
+    .card-text {
+      max-width: 280px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: white;
+      border: 1px solid #f2dbe5;
+      color: #4b5563;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    .item-chip.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(0, 0) scale(1);
+    }
+    .item-chip img { width: 100%; height: 100%; object-fit: contain; display: block; }
   </style>
 </head>
 <body>
@@ -104,6 +149,13 @@
       <div id="gift-message">这里会显示你的备注。</div>
     </div>
     <div class="item-row" id="itemRow"></div>
+    <div class="card-detail" id="cardDetail">
+      <div class="card-note" id="cardNote"></div>
+      <div class="card-view hidden" id="cardView">
+        <img id="cardImg" src="" alt="贺卡" />
+        <div class="card-text" id="cardText"></div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -111,7 +163,6 @@
       rose: '<img src="./rose.png" alt="玫瑰" />',
       bug: '<img src="./bug.png" alt="虫子" />',
       shit: '<img src="./shit.png" alt="大便" />',
-      card: '<img src="./card.png" alt="贺卡" />',
       firefly: '<img src="./firefly.png" alt="萤火虫" />'
     };
 
@@ -129,8 +180,10 @@
       const message = params.get('m');
       const style = params.get('s');
       const items = (params.get('i') || '').split(',').filter(Boolean);
+      const cardKey = params.get('card');
+      const cardText = params.get('cardText') || '';
 
-      if (!legacyData && !sender && !recipient && !message && !items.length) {
+      if (!legacyData && !sender && !recipient && !message && !items.length && !cardKey) {
         document.getElementById('gift-message').textContent = '没有找到包裹信息哦！';
         return;
       }
@@ -145,6 +198,21 @@
         const itemRow = document.getElementById('itemRow');
         itemRow.innerHTML = '';
         window.giftItems = gift.items || [];
+        window.giftCard = gift.card || cardKey || null;
+        window.giftCardText = gift.cardText || cardText || '';
+        const cardNote = document.getElementById('cardNote');
+        const cardView = document.getElementById('cardView');
+        const cardImg = document.getElementById('cardImg');
+        const cardTextEl = document.getElementById('cardText');
+        if (window.giftCard) {
+          cardNote.textContent = '你收到了一张贺卡，打开包裹查看内容。';
+          cardImg.src = `./cards/${window.giftCard}.png`;
+          cardTextEl.textContent = window.giftCardText || '未填写内容';
+          cardView.classList.add('hidden');
+        } else {
+          cardNote.textContent = '';
+          cardView.classList.add('hidden');
+        }
       } catch (error) {
         console.error(error);
         document.getElementById('gift-message').textContent = '包裹内容损坏了~';
@@ -170,7 +238,16 @@
         return el;
       });
       chips.forEach((chip) => itemRow.appendChild(chip));
-      if (!chips.length) return;
+      if (window.giftCard) {
+        const el = document.createElement('div');
+        el.className = 'item-chip';
+        el.innerHTML = `<img src="./cards/${window.giftCard}.png" alt="贺卡" />`;
+        itemRow.appendChild(el);
+      }
+      if (!chips.length && !window.giftCard) return;
+
+      const cardView = document.getElementById('cardView');
+      if (window.giftCard) cardView.classList.remove('hidden');
 
       const rowRect = itemRow.getBoundingClientRect();
       const boxRect = giftBox.getBoundingClientRect();
