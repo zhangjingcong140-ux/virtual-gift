@@ -319,6 +319,10 @@
     if (openCardPicker) {
       openCardPicker.addEventListener('click', () => {
         cardPicker.classList.toggle('active');
+        if (cardPicker.classList.contains('active')) {
+          renderCardPicker();
+          updateCardState();
+        }
       });
     }
 

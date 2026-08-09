@@ -128,6 +128,22 @@
       line-height: 1.6;
       white-space: pre-wrap;
     }
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.85);
+      color: #7b4b66;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 24px;
+      pointer-events: auto;
+      z-index: 10;
+    }
+    .gift-box.loading {
+      pointer-events: none;
+    }
     .item-chip.show {
       opacity: 1;
       visibility: visible;
@@ -140,8 +156,9 @@
   <div class="gift-card">
     <div class="gift-title">你收到一份神秘包裹</div>
     <div class="gift-subtitle">点击礼盒，看看里面藏了什么</div>
-    <div class="gift-box" id="giftBox">
+    <div class="gift-box loading" id="giftBox">
       <img id="giftBoxImg" src="./box.png" alt="包裹" />
+      <div class="loading-overlay" id="loadingOverlay">加载中...</div>
     </div>
     <div class="message-card">
       <div id="sender-name">来自：神秘好友</div>
@@ -221,9 +238,18 @@
 
     const giftBox = document.getElementById('giftBox');
     const giftBoxImg = document.getElementById('giftBoxImg');
+    const loadingOverlay = document.getElementById('loadingOverlay');
     let hasOpened = false;
+    let canOpen = false;
+
+    setTimeout(() => {
+      if (loadingOverlay) loadingOverlay.classList.add('hidden');
+      if (giftBox) giftBox.classList.remove('loading');
+      canOpen = true;
+    }, 3000);
 
     giftBox.addEventListener('click', () => {
+      if (!canOpen || hasOpened) return;
       if (hasOpened) return;
       hasOpened = true;
       giftBox.classList.add('open');
