@@ -100,6 +100,7 @@
     </div>
     <div class="message-card">
       <div id="sender-name">来自：神秘好友</div>
+      <div id="recipient-name">致：</div>
       <div id="gift-message">这里会显示你的备注。</div>
     </div>
     <div class="item-row" id="itemRow"></div>
@@ -123,19 +124,23 @@
     window.onload = function () {
       const params = new URLSearchParams(window.location.search);
       const legacyData = params.get('data');
-      const recipient = params.get('r');
+      const sender = params.get('from') || params.get('r');
+      const recipient = params.get('to') || params.get('t');
       const message = params.get('m');
       const style = params.get('s');
       const items = (params.get('i') || '').split(',').filter(Boolean);
 
-      if (!legacyData && !recipient && !message && !items.length) {
+      if (!legacyData && !sender && !recipient && !message && !items.length) {
         document.getElementById('gift-message').textContent = '没有找到包裹信息哦！';
         return;
       }
 
       try {
-        const gift = legacyData ? decodeLegacyGiftData(legacyData) : { recipient, message, style, items };
-        document.getElementById('sender-name').textContent = `来自：${gift.recipient || '神秘好友'}`;
+        let gift = legacyData ? decodeLegacyGiftData(legacyData) : { sender, recipient, message, style, items };
+        // backward compatibility: older payloads may have used `recipient` as the sender
+        if (!gift.sender && gift.recipient && !params.get('to')) gift.sender = gift.recipient;
+        document.getElementById('sender-name').textContent = `来自：${gift.sender || '神秘好友'}`;
+        document.getElementById('recipient-name').textContent = `致：${gift.recipient || ''}`;
         document.getElementById('gift-message').textContent = gift.message || '这个包裹里没有写备注。';
         const itemRow = document.getElementById('itemRow');
         itemRow.innerHTML = '';
