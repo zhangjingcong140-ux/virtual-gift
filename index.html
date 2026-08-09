@@ -19,16 +19,16 @@
       <div class="grid">
         <div class="card">
           <div class="box-stage">
-            <!-- Only keep the inner box as the single interactive package -->
+            <!-- Large box fills the left area -->
             <div class="inside" id="insideWrap">
-              <div id="insideObjects" class="items-layer"></div>
               <img id="innerBox" class="inner-box" src="./box.png" alt="包裹" />
+              <div id="insideObjects" class="items-layer" aria-hidden="true"></div>
             </div>
-            <div class="box-controls" style="text-align:center;margin-top:12px;">
-              <button class="btn" id="buildBtn" disabled>生成包裹</button>
-            </div>
-            <div id="placedList" class="placed-list"></div>
           </div>
+          <div class="box-controls" style="text-align:center;margin-top:12px;">
+            <button class="btn" id="buildBtn" disabled>生成包裹</button>
+          </div>
+          <div id="placedList" class="placed-list"></div>
         </div>
 
         <div class="card">
@@ -138,11 +138,8 @@
     }
 
     function renderObjects() {
-      insideObjects.innerHTML = state.inside.map((it, idx) => `
-        <div class="object-item" data-idx="${idx}" style="left:${it.x}px;top:${it.y}px;">
-          <img src="${itemMap[it.key].image}" alt="${itemMap[it.key].label}" />
-        </div>
-      `).join('');
+      // Do not render placed items visually over the box to avoid overlap; list below shows them
+      insideObjects.innerHTML = '';
 
       const sender = senderInput.value.trim();
       const recipient = recipientInput.value.trim();
@@ -253,10 +250,11 @@
       if (!boxOpen) return; // only accept drops when box open
       const key = e.dataTransfer.getData('text/plain');
       if (!key) return;
-      const rect = insideObjects.getBoundingClientRect();
-      const x = e.clientX - rect.left - 32; // center offset
-      const y = e.clientY - rect.top - 32;
-      state.inside.push({ key, x: Math.max(8, x), y: Math.max(8, y) });
+      // We register the placement but do not visually overlay items on the box.
+      const rect = insideWrap.getBoundingClientRect();
+      const x = Math.round(e.clientX - rect.left);
+      const y = Math.round(e.clientY - rect.top);
+      state.inside.push({ key, x: Math.max(0, x), y: Math.max(0, y) });
       renderObjects();
       renderPlacedList();
       createShareLink();
