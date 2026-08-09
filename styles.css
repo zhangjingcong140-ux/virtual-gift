@@ -151,6 +151,17 @@ textarea { min-height: 82px; resize: vertical; }
   place-items: center;
   padding: 6px;
 }
+.inner-box {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 6px;
+  pointer-events: auto;
+  opacity: 0.95;
+}
+.inner-box.open { transform: translateX(-50%) translateY(-6px); }
 .object-item svg { width: 48px; height: 48px; }
 .result-card, .share-card {
   margin-top: 16px;

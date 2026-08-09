@@ -14,7 +14,6 @@
           <h1>📦 3D 神秘包裹</h1>
           <p>填写收件人或选择小物件后，才能生成可分享的包裹。</p>
         </div>
-        <button class="btn" id="buildBtn" disabled>生成包裹</button>
       </div>
 
       <div class="grid">
@@ -23,8 +22,14 @@
             <div class="box-wrap" id="boxWrap">
               <img id="boxImg" class="box-svg" src="./box.png" alt="包裹" />
             </div>
+            <div class="box-controls" style="text-align:center;margin-top:12px;">
+              <button class="btn" id="buildBtn" disabled>生成包裹</button>
+            </div>
           </div>
-          <div class="inside" id="insideObjects"></div>
+          <div class="inside" id="insideWrap">
+            <div id="insideObjects" class="items-layer"></div>
+            <img id="innerBox" class="inner-box" src="./box.png" alt="内部包裹" />
+          </div>
         </div>
 
         <div class="card">
@@ -79,6 +84,7 @@
     const itemMap = Object.fromEntries(itemDefinitions.map((item) => [item.key, item]));
 
     const insideObjects = document.getElementById('insideObjects');
+    const insideWrap = document.getElementById('insideWrap');
     const resultText = document.getElementById('resultText');
     const boxWrap = document.getElementById('boxWrap');
     const boxImg = document.getElementById('boxImg');
@@ -196,15 +202,27 @@
 
     // toggle package open/close by swapping image
     let boxOpen = false;
+    function syncBoxImages() {
+      boxImg.src = boxOpen ? './box_open.png' : './box.png';
+      const innerBox = document.getElementById('innerBox');
+      if (innerBox) innerBox.src = boxOpen ? './box_open.png' : './box.png';
+      boxWrap.classList.toggle('open', boxOpen);
+      if (innerBox) innerBox.classList.toggle('open', boxOpen);
+    }
+
     boxWrap.addEventListener('click', () => {
       boxOpen = !boxOpen;
-      boxWrap.classList.toggle('open', boxOpen);
-      boxImg.src = boxOpen ? './box_open.png' : './box.png';
+      syncBoxImages();
     });
 
+    const innerBox = document.getElementById('innerBox');
+    if (innerBox) {
+      innerBox.addEventListener('click', (e) => { e.stopPropagation(); boxOpen = !boxOpen; syncBoxImages(); });
+    }
+
     // drag & drop into inside area
-    insideObjects.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
-    insideObjects.addEventListener('drop', (e) => {
+    insideWrap.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+    insideWrap.addEventListener('drop', (e) => {
       e.preventDefault();
       if (!boxOpen) return; // only accept drops when box open
       const key = e.dataTransfer.getData('text/plain');
