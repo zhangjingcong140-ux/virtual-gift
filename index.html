@@ -19,16 +19,14 @@
       <div class="grid">
         <div class="card">
           <div class="box-stage">
-            <div class="box-wrap" id="boxWrap">
-              <img id="boxImg" class="box-svg" src="./box.png" alt="包裹" />
+            <!-- Only keep the inner box as the single interactive package -->
+            <div class="inside" id="insideWrap">
+              <div id="insideObjects" class="items-layer"></div>
+              <img id="innerBox" class="inner-box" src="./box.png" alt="包裹" />
             </div>
             <div class="box-controls" style="text-align:center;margin-top:12px;">
               <button class="btn" id="buildBtn" disabled>生成包裹</button>
             </div>
-          </div>
-          <div class="inside" id="insideWrap">
-            <div id="insideObjects" class="items-layer"></div>
-            <img id="innerBox" class="inner-box" src="./box.png" alt="内部包裹" />
           </div>
         </div>
 
@@ -86,8 +84,7 @@
     const insideObjects = document.getElementById('insideObjects');
     const insideWrap = document.getElementById('insideWrap');
     const resultText = document.getElementById('resultText');
-    const boxWrap = document.getElementById('boxWrap');
-    const boxImg = document.getElementById('boxImg');
+    const innerBox = document.getElementById('innerBox');
     const recipientInput = document.getElementById('recipient');
     const messageInput = document.getElementById('message');
     const itemList = document.getElementById('itemList');
@@ -182,8 +179,10 @@
       const hasRecipient = recipient.length > 0;
       const hasSelection = state.selected.length > 0 || state.inside.length > 0;
       if (!hasRecipient && !hasSelection) return;
-      boxWrap.classList.add('open');
-      setTimeout(() => boxWrap.classList.remove('open'), 500);
+      if (innerBox) {
+        innerBox.classList.add('open');
+        setTimeout(() => innerBox.classList.remove('open'), 500);
+      }
       renderObjects();
       createShareLink();
     });
@@ -200,24 +199,18 @@
       }
     });
 
-    // toggle package open/close by swapping image
+    // toggle single inner box open/close by swapping image
     let boxOpen = false;
     function syncBoxImages() {
-      boxImg.src = boxOpen ? './box_open.png' : './box.png';
-      const innerBox = document.getElementById('innerBox');
       if (innerBox) innerBox.src = boxOpen ? './box_open.png' : './box.png';
-      boxWrap.classList.toggle('open', boxOpen);
       if (innerBox) innerBox.classList.toggle('open', boxOpen);
     }
 
-    boxWrap.addEventListener('click', () => {
-      boxOpen = !boxOpen;
-      syncBoxImages();
-    });
-
-    const innerBox = document.getElementById('innerBox');
     if (innerBox) {
-      innerBox.addEventListener('click', (e) => { e.stopPropagation(); boxOpen = !boxOpen; syncBoxImages(); });
+      innerBox.addEventListener('click', () => {
+        boxOpen = !boxOpen;
+        syncBoxImages();
+      });
     }
 
     // drag & drop into inside area
