@@ -138,13 +138,8 @@
     }
 
     function renderObjects() {
-      // Render placed items visually inside the box
-      const itemHtml = state.inside.map((it, idx) => `
-        <div class="object-item" data-idx="${idx}" style="left:${it.x}px;top:${it.y}px;">
-          <img src="${itemMap[it.key].image}" alt="${itemMap[it.key].label}" />
-        </div>
-      `).join('');
-      insideObjects.innerHTML = itemHtml;
+      // Do not render placed items visually on the box; only show them in the list below.
+      insideObjects.innerHTML = '';
 
       const sender = senderInput.value.trim();
       const recipient = recipientInput.value.trim();
