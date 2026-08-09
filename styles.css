@@ -139,11 +139,11 @@ textarea { min-height: 82px; resize: vertical; }
   background: white;
 }
 .card-style.active { border-color: var(--pink-deep); background: #fff3f7; }
-.inside { position: relative; min-height: 470px; margin-top: 12px; }
+.inside { position: relative; min-height: 520px; margin-top: 12px; }
 .object-item {
   position: absolute;
-  width: 64px;
-  height: 64px;
+  width: 44px;
+  height: 44px;
   border-radius: 16px;
   background: #fff;
   border: 1px dashed #e3d3dc;
@@ -154,9 +154,9 @@ textarea { min-height: 82px; resize: vertical; }
 .inner-box {
   position: absolute;
   left: 50%;
-  bottom: 6px;
-  width: 240px;
-  height: 240px;
+  bottom: 10px;
+  width: 380px;
+  height: 380px;
   transform: translateX(-50%);
   display: block;
   object-fit: contain;

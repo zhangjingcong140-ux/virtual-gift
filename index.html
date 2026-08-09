@@ -138,8 +138,13 @@
     }
 
     function renderObjects() {
-      // Do not render placed items visually over the box to avoid overlap; list below shows them
-      insideObjects.innerHTML = '';
+      // Render placed items visually inside the box
+      const itemHtml = state.inside.map((it, idx) => `
+        <div class="object-item" data-idx="${idx}" style="left:${it.x}px;top:${it.y}px;">
+          <img src="${itemMap[it.key].image}" alt="${itemMap[it.key].label}" />
+        </div>
+      `).join('');
+      insideObjects.innerHTML = itemHtml;
 
       const sender = senderInput.value.trim();
       const recipient = recipientInput.value.trim();
@@ -250,10 +255,10 @@
       if (!boxOpen) return; // only accept drops when box open
       const key = e.dataTransfer.getData('text/plain');
       if (!key) return;
-      // We register the placement but do not visually overlay items on the box.
       const rect = insideWrap.getBoundingClientRect();
-      const x = Math.round(e.clientX - rect.left);
-      const y = Math.round(e.clientY - rect.top);
+      const itemW = 44;
+      const x = Math.round(e.clientX - rect.left - itemW / 2);
+      const y = Math.round(e.clientY - rect.top - itemW / 2);
       state.inside.push({ key, x: Math.max(0, x), y: Math.max(0, y) });
       renderObjects();
       renderPlacedList();
