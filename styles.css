@@ -139,8 +139,9 @@ textarea { min-height: 82px; resize: vertical; }
   background: white;
 }
 .card-style.active { border-color: var(--pink-deep); background: #fff3f7; }
-.inside { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.inside { position: relative; min-height: 160px; margin-top: 12px; }
 .object-item {
+  position: absolute;
   width: 64px;
   height: 64px;
   border-radius: 16px;

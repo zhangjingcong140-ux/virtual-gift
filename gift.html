@@ -44,41 +44,11 @@
       height: 240px;
       margin: 0 auto 18px;
       cursor: pointer;
-      transform-style: preserve-3d;
       transition: transform .35s ease;
+      display: grid;
+      place-items: center;
     }
-    .gift-box:hover { transform: translateY(-2px); }
-    .gift-lid {
-      position: absolute;
-      top: 22px;
-      left: 20px;
-      width: 200px;
-      height: 90px;
-      background: linear-gradient(135deg, #ff82a8, #d63f63);
-      border-radius: 22px 22px 16px 16px;
-      box-shadow: inset 0 -12px 18px rgba(0,0,0,0.15);
-      transform-origin: center bottom;
-      transition: transform .65s cubic-bezier(.2,.8,.2,1);
-      z-index: 2;
-    }
-    .gift-body {
-      position: absolute;
-      left: 20px;
-      bottom: 16px;
-      width: 200px;
-      height: 130px;
-      background: linear-gradient(135deg, #fff0f4, #ffe1eb);
-      border-radius: 18px;
-      border: 2px solid #f3c4d2;
-      box-shadow: inset 0 8px 18px rgba(255,255,255,0.6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #b43a5c;
-      font-weight: 700;
-    }
-    .gift-box.open .gift-lid { transform: rotateX(-110deg); }
-    .gift-box.open .gift-body { transform: translateY(4px); }
+    .gift-box img { width: 100%; height: 100%; object-fit: contain; }
     .message-card {
       margin: 14px 0 10px;
       padding: 12px;
@@ -126,12 +96,11 @@
     <div class="gift-title">你收到一份神秘包裹</div>
     <div class="gift-subtitle">点击礼盒，看看里面藏了什么</div>
     <div class="gift-box" id="giftBox">
-      <div class="gift-lid"></div>
-      <div class="gift-body">点击打开</div>
+      <img id="giftBoxImg" src="./box.png" alt="包裹" />
     </div>
     <div class="message-card">
       <div id="sender-name">来自：神秘好友</div>
-      <div id="gift-message">这里会显示你的祝福语。</div>
+      <div id="gift-message">这里会显示你的备注。</div>
     </div>
     <div class="item-row" id="itemRow"></div>
   </div>
@@ -167,7 +136,7 @@
       try {
         const gift = legacyData ? decodeLegacyGiftData(legacyData) : { recipient, message, style, items };
         document.getElementById('sender-name').textContent = `来自：${gift.recipient || '神秘好友'}`;
-        document.getElementById('gift-message').textContent = gift.message || '这个包裹里没有写祝福语。';
+        document.getElementById('gift-message').textContent = gift.message || '这个包裹里没有写备注。';
         const itemRow = document.getElementById('itemRow');
         itemRow.innerHTML = '';
         window.giftItems = gift.items || [];
@@ -178,12 +147,14 @@
     };
 
     const giftBox = document.getElementById('giftBox');
+    const giftBoxImg = document.getElementById('giftBoxImg');
     let hasOpened = false;
 
     giftBox.addEventListener('click', () => {
       if (hasOpened) return;
       hasOpened = true;
       giftBox.classList.add('open');
+      if (giftBoxImg) giftBoxImg.src = './box_open.png';
 
       const itemRow = document.getElementById('itemRow');
       itemRow.innerHTML = '';

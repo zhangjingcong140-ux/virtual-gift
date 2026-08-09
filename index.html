@@ -21,25 +21,7 @@
         <div class="card">
           <div class="box-stage">
             <div class="box-wrap" id="boxWrap">
-              <svg class="box-svg" viewBox="0 0 320 320" role="img" aria-label="神秘包裹">
-                <defs>
-                  <linearGradient id="boxTop" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#ff8fb3" />
-                    <stop offset="100%" stop-color="#d5406d" />
-                  </linearGradient>
-                  <linearGradient id="boxSide" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#ffd6e5" />
-                    <stop offset="100%" stop-color="#ffa5c3" />
-                  </linearGradient>
-                </defs>
-                <rect x="70" y="120" width="180" height="140" rx="20" fill="url(#boxSide)" stroke="#c84272" stroke-width="6" />
-                <polygon points="70,120 160,70 250,120 160,170" fill="url(#boxTop)" stroke="#c84272" stroke-width="6" />
-                <rect x="95" y="150" width="130" height="90" rx="14" fill="#fffafc" opacity="0.95" />
-                <rect x="120" y="110" width="80" height="24" rx="12" fill="#ffe1eb" />
-                <path d="M140 118h40" stroke="#c84272" stroke-width="4" stroke-linecap="round" />
-                <path d="M110 170c18 18 82 18 100 0" stroke="#ff79a2" stroke-width="5" fill="none" stroke-linecap="round" />
-                <circle cx="160" cy="168" r="8" fill="#fff" />
-              </svg>
+              <img id="boxImg" class="box-svg" src="./box.png" alt="包裹" />
             </div>
           </div>
           <div class="inside" id="insideObjects"></div>
@@ -51,16 +33,8 @@
             <input id="recipient" placeholder="请输入收件人姓名" />
           </div>
           <div class="form-group">
-            <label for="message">祝福语（可选）</label>
-            <textarea id="message" placeholder="填写祝福语，没有也可以"></textarea>
-          </div>
-          <div class="form-group">
-            <label>贺卡样式</label>
-            <div class="card-style-row" id="cardStyles">
-              <div class="card-style active" data-style="classic">经典</div>
-              <div class="card-style" data-style="cute">可爱</div>
-              <div class="card-style" data-style="star">星空</div>
-            </div>
+            <label for="message">备注（可选）</label>
+            <textarea id="message" placeholder="填写备注，没有也可以"></textarea>
           </div>
           <div class="form-group">
             <label>小物件</label>
@@ -90,8 +64,8 @@
 
   <script>
     const state = {
-      items: [],
-      style: 'classic'
+      selected: [], // items selected in the sidebar
+      inside: [] // items placed inside the box with positions {key,x,y}
     };
 
     const itemDefinitions = [
@@ -107,6 +81,7 @@
     const insideObjects = document.getElementById('insideObjects');
     const resultText = document.getElementById('resultText');
     const boxWrap = document.getElementById('boxWrap');
+    const boxImg = document.getElementById('boxImg');
     const recipientInput = document.getElementById('recipient');
     const messageInput = document.getElementById('message');
     const itemList = document.getElementById('itemList');
@@ -117,18 +92,17 @@
 
     function updateGenerateState() {
       const hasRecipient = recipientInput.value.trim().length > 0;
-      const hasSelection = state.items.length > 0;
+      const hasSelection = state.selected.length > 0 || state.inside.length > 0;
       const canGenerate = hasRecipient || hasSelection;
       buildBtn.disabled = !canGenerate;
-      buildBtn.textContent = canGenerate ? '生成包裹' : '生成包裹';
       helperText.textContent = canGenerate
-        ? '祝福语是可选的，收件人或小物件至少填一项。'
-        : '请输入收件人，或至少选择一个小物件。';
+        ? '备注是可选的，收件人或包裹内物件至少填一项。'
+        : '请输入收件人，或至少放入一个小物件。';
     }
 
     function renderItemButtons() {
       itemList.innerHTML = itemDefinitions.map((item) => `
-        <button class="item-btn ${state.items.includes(item.key) ? 'active' : ''}" data-item="${item.key}" type="button">
+        <button class="item-btn ${state.selected.includes(item.key) ? 'active' : ''}" data-item="${item.key}" type="button" draggable="true">
           <span class="item-icon"><img src="${item.image}" alt="${item.label}" /></span>
           <span>${item.label}</span>
         </button>
@@ -137,64 +111,58 @@
       Array.from(itemList.querySelectorAll('.item-btn')).forEach((btn) => {
         btn.addEventListener('click', () => {
           const item = btn.dataset.item;
-          if (state.items.includes(item)) {
-            state.items = state.items.filter((x) => x !== item);
+          if (state.selected.includes(item)) {
+            state.selected = state.selected.filter((x) => x !== item);
           } else {
-            state.items.push(item);
+            state.selected.push(item);
           }
           renderItemButtons();
           renderObjects();
+        });
+
+        btn.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', btn.dataset.item);
+          e.dataTransfer.effectAllowed = 'copy';
         });
       });
     }
 
     function renderObjects() {
-      insideObjects.innerHTML = state.items.map((item) => `<div class="object-item"><img src="${itemMap[item].image}" alt="${itemMap[item].label}" /></div>`).join('');
+      insideObjects.innerHTML = state.inside.map((it, idx) => `
+        <div class="object-item" data-idx="${idx}" style="left:${it.x}px;top:${it.y}px;">
+          <img src="${itemMap[it.key].image}" alt="${itemMap[it.key].label}" />
+        </div>
+      `).join('');
 
       const recipient = recipientInput.value.trim();
       const message = messageInput.value.trim();
-      const styleName = { classic: '经典', cute: '可爱', star: '星空' }[state.style] || '经典';
-      const itemText = state.items.map((item) => itemMap[item].label).join('、') || '还没有放入任何小物件';
-      resultText.innerHTML = `收件人：${recipient || '尚未填写'}<br/>祝福语：${message || '可选'}<br/>贺卡样式：${styleName}<br/>包裹内物件：${itemText}`;
+      const itemText = (state.inside.length ? state.inside.map(i => itemMap[i.key].label) : state.selected.map(i => itemMap[i].label)).join('、') || '还没有放入任何小物件';
+      resultText.innerHTML = `收件人：${recipient || '尚未填写'}<br/>备注：${message || '可选'}<br/>包裹内物件：${itemText}`;
       updateGenerateState();
     }
 
     function createShareLink() {
       const recipient = recipientInput.value.trim();
       const message = messageInput.value.trim();
+      const items = state.inside.length ? state.inside.map(i => i.key) : state.selected;
       const hasRecipient = recipient.length > 0;
-      const hasSelection = state.items.length > 0;
+      const hasSelection = items.length > 0;
       if (!hasRecipient && !hasSelection) {
         shareUrlInput.value = '填写后才会生成分享链接';
         qrCodeImg.removeAttribute('src');
         return;
       }
 
-      const payload = {
-        recipient,
-        message,
-        style: state.style,
-        items: state.items
-      };
       const url = new URL('gift.html', window.location.href);
-      if (payload.recipient) url.searchParams.set('r', payload.recipient);
-      if (payload.message) url.searchParams.set('m', payload.message);
-      if (payload.style) url.searchParams.set('s', payload.style);
-      if (payload.items.length) url.searchParams.set('i', payload.items.join(','));
+      if (recipient) url.searchParams.set('r', recipient);
+      if (message) url.searchParams.set('m', message);
+      if (items.length) url.searchParams.set('i', items.join(','));
 
       shareUrlInput.value = url.toString();
       qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url.toString())}`;
       qrCodeImg.alt = '礼物二维码';
     }
 
-    document.querySelectorAll('.card-style').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.card-style').forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-        state.style = btn.dataset.style;
-        renderObjects();
-      });
-    });
 
     [recipientInput, messageInput].forEach((input) => {
       input.addEventListener('input', () => {
@@ -206,10 +174,8 @@
     document.getElementById('buildBtn').addEventListener('click', () => {
       const recipient = recipientInput.value.trim();
       const hasRecipient = recipient.length > 0;
-      const hasSelection = state.items.length > 0;
-      if (!hasRecipient && !hasSelection) {
-        return;
-      }
+      const hasSelection = state.selected.length > 0 || state.inside.length > 0;
+      if (!hasRecipient && !hasSelection) return;
       boxWrap.classList.add('open');
       setTimeout(() => boxWrap.classList.remove('open'), 500);
       renderObjects();
@@ -228,10 +194,28 @@
       }
     });
 
+    // toggle package open/close by swapping image
+    let boxOpen = false;
     boxWrap.addEventListener('click', () => {
-      document.querySelector('.card:nth-of-type(2)').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      boxOpen = !boxOpen;
+      boxWrap.classList.toggle('open', boxOpen);
+      boxImg.src = boxOpen ? './box_open.png' : './box.png';
     });
 
+    // drag & drop into inside area
+    insideObjects.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+    insideObjects.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (!boxOpen) return; // only accept drops when box open
+      const key = e.dataTransfer.getData('text/plain');
+      if (!key) return;
+      const rect = insideObjects.getBoundingClientRect();
+      const x = e.clientX - rect.left - 32; // center offset
+      const y = e.clientY - rect.top - 32;
+      state.inside.push({ key, x: Math.max(8, x), y: Math.max(8, y) });
+      renderObjects();
+      createShareLink();
+    });
     renderItemButtons();
     renderObjects();
     createShareLink();
