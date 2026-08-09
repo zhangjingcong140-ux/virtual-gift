@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>你收到一份神秘包裹</title>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      box-sizing: border-box;
+      background: linear-gradient(135deg, #fff7f0 0%, #ffe6ef 45%, #f8f8ff 100%);
+      color: #2f2f2f;
+    }
+    .gift-card {
+      position: relative;
+      width: min(100%, 460px);
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.16);
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .gift-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #d63f63;
+      margin-bottom: 6px;
+    }
+    .gift-subtitle {
+      color: #6b7280;
+      margin-bottom: 18px;
+    }
+    .gift-box {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      margin: 0 auto 18px;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: transform .35s ease;
+    }
+    .gift-box:hover { transform: translateY(-2px); }
+    .gift-lid {
+      position: absolute;
+      top: 22px;
+      left: 20px;
+      width: 200px;
+      height: 90px;
+      background: linear-gradient(135deg, #ff82a8, #d63f63);
+      border-radius: 22px 22px 16px 16px;
+      box-shadow: inset 0 -12px 18px rgba(0,0,0,0.15);
+      transform-origin: center bottom;
+      transition: transform .65s cubic-bezier(.2,.8,.2,1);
+      z-index: 2;
+    }
+    .gift-body {
+      position: absolute;
+      left: 20px;
+      bottom: 16px;
+      width: 200px;
+      height: 130px;
+      background: linear-gradient(135deg, #fff0f4, #ffe1eb);
+      border-radius: 18px;
+      border: 2px solid #f3c4d2;
+      box-shadow: inset 0 8px 18px rgba(255,255,255,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #b43a5c;
+      font-weight: 700;
+    }
+    .gift-box.open .gift-lid { transform: rotateX(-110deg); }
+    .gift-box.open .gift-body { transform: translateY(4px); }
+    .message-card {
+      margin: 14px 0 10px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #fff7fb;
+      border: 1px dashed #e7c8d7;
+      color: #4b5563;
+      line-height: 1.6;
+    }
+    .item-row {
+      position: relative;
+      min-height: 90px;
+      margin-top: 14px;
+      padding-top: 8px;
+      overflow: hidden;
+    }
+    .item-chip {
+      position: absolute;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: #fff7fb;
+      border: 1px dashed #e8d0dc;
+      display: grid;
+      place-items: center;
+      padding: 6px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translate(-50%, -50%) scale(0.8);
+      transition: all .45s cubic-bezier(.2,.8,.2,1);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+      z-index: 5;
+      pointer-events: none;
+    }
+    .item-chip.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(0, 0) scale(1);
+    }
+    .item-chip img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  </style>
+</head>
+<body>
+  <div class="gift-card">
+    <div class="gift-title">你收到一份神秘包裹</div>
+    <div class="gift-subtitle">点击礼盒，看看里面藏了什么</div>
+    <div class="gift-box" id="giftBox">
+      <div class="gift-lid"></div>
+      <div class="gift-body">点击打开</div>
+    </div>
+    <div class="message-card">
+      <div id="sender-name">来自：神秘好友</div>
+      <div id="gift-message">这里会显示你的祝福语。</div>
+    </div>
+    <div class="item-row" id="itemRow"></div>
+  </div>
+
+  <script>
+    const itemMap = {
+      rose: '<img src="./rose.png" alt="玫瑰" />',
+      bug: '<img src="./bug.png" alt="虫子" />',
+      shit: '<img src="./shit.png" alt="大便" />',
+      card: '<img src="./card.png" alt="贺卡" />',
+      firefly: '<img src="./firefly.png" alt="萤火虫" />'
+    };
+
+    function decodeLegacyGiftData(text) {
+      const binary = atob(text);
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    window.onload = function () {
+      const params = new URLSearchParams(window.location.search);
+      const legacyData = params.get('data');
+      const recipient = params.get('r');
+      const message = params.get('m');
+      const style = params.get('s');
+      const items = (params.get('i') || '').split(',').filter(Boolean);
+
+      if (!legacyData && !recipient && !message && !items.length) {
+        document.getElementById('gift-message').textContent = '没有找到包裹信息哦！';
+        return;
+      }
+
+      try {
+        const gift = legacyData ? decodeLegacyGiftData(legacyData) : { recipient, message, style, items };
+        document.getElementById('sender-name').textContent = `来自：${gift.recipient || '神秘好友'}`;
+        document.getElementById('gift-message').textContent = gift.message || '这个包裹里没有写祝福语。';
+        const itemRow = document.getElementById('itemRow');
+        itemRow.innerHTML = '';
+        window.giftItems = gift.items || [];
+      } catch (error) {
+        console.error(error);
+        document.getElementById('gift-message').textContent = '包裹内容损坏了~';
+      }
+    };
+
+    const giftBox = document.getElementById('giftBox');
+    let hasOpened = false;
+
+    giftBox.addEventListener('click', () => {
+      if (hasOpened) return;
+      hasOpened = true;
+      giftBox.classList.add('open');
+
+      const itemRow = document.getElementById('itemRow');
+      itemRow.innerHTML = '';
+      const chips = (window.giftItems || []).map((item) => {
+        const el = document.createElement('div');
+        el.className = 'item-chip';
+        el.innerHTML = itemMap[item] || itemMap.rose;
+        return el;
+      });
+      chips.forEach((chip) => itemRow.appendChild(chip));
+      if (!chips.length) return;
+
+      const rowRect = itemRow.getBoundingClientRect();
+      const boxRect = giftBox.getBoundingClientRect();
+      const startX = boxRect.left - rowRect.left + boxRect.width / 2;
+      const startY = boxRect.top - rowRect.top + boxRect.height / 2;
+      const chipW = 56;
+      const chipGap = 12;
+      const totalW = chips.length * chipW + Math.max(0, chips.length - 1) * chipGap;
+      const baseX = Math.max(12, (rowRect.width - totalW) / 2);
+      const baseY = 10;
+
+      chips.forEach((chip, index) => {
+        chip.style.left = `${startX}px`;
+        chip.style.top = `${startY}px`;
+        chip.style.opacity = '0';
+        chip.style.transform = 'translate(-50%, -50%) scale(0.8)';
+        setTimeout(() => {
+          chip.style.left = `${baseX + index * (chipW + chipGap)}px`;
+          chip.style.top = `${baseY}px`;
+          chip.style.opacity = '1';
+          chip.style.transform = 'translate(0, 0) scale(1)';
+          chip.classList.add('show');
+        }, 120 * index);
+      });
+    });
+  </script>
+</body>
+</html>

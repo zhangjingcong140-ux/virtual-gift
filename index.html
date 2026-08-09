@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D 神秘包裹</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="panel">
+      <div class="header">
+        <div>
+          <h1>📦 3D 神秘包裹</h1>
+          <p>填写收件人或选择小物件后，才能生成可分享的包裹。</p>
+        </div>
+        <button class="btn" id="buildBtn" disabled>生成包裹</button>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="box-stage">
+            <div class="box-wrap" id="boxWrap">
+              <svg class="box-svg" viewBox="0 0 320 320" role="img" aria-label="神秘包裹">
+                <defs>
+                  <linearGradient id="boxTop" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#ff8fb3" />
+                    <stop offset="100%" stop-color="#d5406d" />
+                  </linearGradient>
+                  <linearGradient id="boxSide" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#ffd6e5" />
+                    <stop offset="100%" stop-color="#ffa5c3" />
+                  </linearGradient>
+                </defs>
+                <rect x="70" y="120" width="180" height="140" rx="20" fill="url(#boxSide)" stroke="#c84272" stroke-width="6" />
+                <polygon points="70,120 160,70 250,120 160,170" fill="url(#boxTop)" stroke="#c84272" stroke-width="6" />
+                <rect x="95" y="150" width="130" height="90" rx="14" fill="#fffafc" opacity="0.95" />
+                <rect x="120" y="110" width="80" height="24" rx="12" fill="#ffe1eb" />
+                <path d="M140 118h40" stroke="#c84272" stroke-width="4" stroke-linecap="round" />
+                <path d="M110 170c18 18 82 18 100 0" stroke="#ff79a2" stroke-width="5" fill="none" stroke-linecap="round" />
+                <circle cx="160" cy="168" r="8" fill="#fff" />
+              </svg>
+            </div>
+          </div>
+          <div class="inside" id="insideObjects"></div>
+        </div>
+
+        <div class="card">
+          <div class="form-group">
+            <label for="recipient">收件人姓名</label>
+            <input id="recipient" placeholder="请输入收件人姓名" />
+          </div>
+          <div class="form-group">
+            <label for="message">祝福语（可选）</label>
+            <textarea id="message" placeholder="填写祝福语，没有也可以"></textarea>
+          </div>
+          <div class="form-group">
+            <label>贺卡样式</label>
+            <div class="card-style-row" id="cardStyles">
+              <div class="card-style active" data-style="classic">经典</div>
+              <div class="card-style" data-style="cute">可爱</div>
+              <div class="card-style" data-style="star">星空</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>小物件</label>
+            <div class="item-list" id="itemList"></div>
+          </div>
+          <p class="helper-text" id="helperText">请输入收件人，或至少选择一个小物件。</p>
+
+          <div class="result-card" id="resultCard">
+            <div class="result-title">包裹预览</div>
+            <div id="resultText">还没有准备好可分享的包裹。</div>
+          </div>
+
+          <div class="share-card">
+            <div class="result-title">分享链接</div>
+            <div class="share-row">
+              <input id="shareUrl" readonly value="填写后才会生成分享链接" />
+              <button class="btn small" id="copyBtn" type="button">复制</button>
+            </div>
+            <div class="qr-wrap">
+              <img id="qrCode" alt="礼物二维码" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      items: [],
+      style: 'classic'
+    };
+
+    const itemDefinitions = [
+      { key: 'rose', label: '玫瑰', image: './rose.png' },
+      { key: 'bug', label: '虫子', image: './bug.png' },
+      { key: 'shit', label: '大便', image: './shit.png' },
+      { key: 'card', label: '贺卡', image: './card.png' },
+      { key: 'firefly', label: '萤火虫', image: './firefly.png' }
+    ];
+
+    const itemMap = Object.fromEntries(itemDefinitions.map((item) => [item.key, item]));
+
+    const insideObjects = document.getElementById('insideObjects');
+    const resultText = document.getElementById('resultText');
+    const boxWrap = document.getElementById('boxWrap');
+    const recipientInput = document.getElementById('recipient');
+    const messageInput = document.getElementById('message');
+    const itemList = document.getElementById('itemList');
+    const shareUrlInput = document.getElementById('shareUrl');
+    const qrCodeImg = document.getElementById('qrCode');
+    const buildBtn = document.getElementById('buildBtn');
+    const helperText = document.getElementById('helperText');
+
+    function updateGenerateState() {
+      const hasRecipient = recipientInput.value.trim().length > 0;
+      const hasSelection = state.items.length > 0;
+      const canGenerate = hasRecipient || hasSelection;
+      buildBtn.disabled = !canGenerate;
+      buildBtn.textContent = canGenerate ? '生成包裹' : '生成包裹';
+      helperText.textContent = canGenerate
+        ? '祝福语是可选的，收件人或小物件至少填一项。'
+        : '请输入收件人，或至少选择一个小物件。';
+    }
+
+    function renderItemButtons() {
+      itemList.innerHTML = itemDefinitions.map((item) => `
+        <button class="item-btn ${state.items.includes(item.key) ? 'active' : ''}" data-item="${item.key}" type="button">
+          <span class="item-icon"><img src="${item.image}" alt="${item.label}" /></span>
+          <span>${item.label}</span>
+        </button>
+      `).join('');
+
+      Array.from(itemList.querySelectorAll('.item-btn')).forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const item = btn.dataset.item;
+          if (state.items.includes(item)) {
+            state.items = state.items.filter((x) => x !== item);
+          } else {
+            state.items.push(item);
+          }
+          renderItemButtons();
+          renderObjects();
+        });
+      });
+    }
+
+    function renderObjects() {
+      insideObjects.innerHTML = state.items.map((item) => `<div class="object-item"><img src="${itemMap[item].image}" alt="${itemMap[item].label}" /></div>`).join('');
+
+      const recipient = recipientInput.value.trim();
+      const message = messageInput.value.trim();
+      const styleName = { classic: '经典', cute: '可爱', star: '星空' }[state.style] || '经典';
+      const itemText = state.items.map((item) => itemMap[item].label).join('、') || '还没有放入任何小物件';
+      resultText.innerHTML = `收件人：${recipient || '尚未填写'}<br/>祝福语：${message || '可选'}<br/>贺卡样式：${styleName}<br/>包裹内物件：${itemText}`;
+      updateGenerateState();
+    }
+
+    function createShareLink() {
+      const recipient = recipientInput.value.trim();
+      const message = messageInput.value.trim();
+      const hasRecipient = recipient.length > 0;
+      const hasSelection = state.items.length > 0;
+      if (!hasRecipient && !hasSelection) {
+        shareUrlInput.value = '填写后才会生成分享链接';
+        qrCodeImg.removeAttribute('src');
+        return;
+      }
+
+      const payload = {
+        recipient,
+        message,
+        style: state.style,
+        items: state.items
+      };
+      const url = new URL('gift.html', window.location.href);
+      if (payload.recipient) url.searchParams.set('r', payload.recipient);
+      if (payload.message) url.searchParams.set('m', payload.message);
+      if (payload.style) url.searchParams.set('s', payload.style);
+      if (payload.items.length) url.searchParams.set('i', payload.items.join(','));
+
+      shareUrlInput.value = url.toString();
+      qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url.toString())}`;
+      qrCodeImg.alt = '礼物二维码';
+    }
+
+    document.querySelectorAll('.card-style').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.card-style').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.style = btn.dataset.style;
+        renderObjects();
+      });
+    });
+
+    [recipientInput, messageInput].forEach((input) => {
+      input.addEventListener('input', () => {
+        renderObjects();
+        createShareLink();
+      });
+    });
+
+    document.getElementById('buildBtn').addEventListener('click', () => {
+      const recipient = recipientInput.value.trim();
+      const hasRecipient = recipient.length > 0;
+      const hasSelection = state.items.length > 0;
+      if (!hasRecipient && !hasSelection) {
+        return;
+      }
+      boxWrap.classList.add('open');
+      setTimeout(() => boxWrap.classList.remove('open'), 500);
+      renderObjects();
+      createShareLink();
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(shareUrlInput.value);
+        document.getElementById('copyBtn').textContent = '已复制';
+        setTimeout(() => {
+          document.getElementById('copyBtn').textContent = '复制';
+        }, 1200);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+
+    boxWrap.addEventListener('click', () => {
+      document.querySelector('.card:nth-of-type(2)').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    renderItemButtons();
+    renderObjects();
+    createShareLink();
+  </script>
+</body>
+</html>
