@@ -25,9 +25,6 @@
               <div id="insideObjects" class="items-layer" aria-hidden="true"></div>
             </div>
           </div>
-          <div class="box-controls" style="text-align:center;margin-top:12px;">
-            <button class="btn" id="buildBtn" disabled>生成包裹</button>
-          </div>
           <div id="placedList" class="placed-list"></div>
         </div>
 
@@ -58,8 +55,11 @@
           <div class="share-card">
             <div class="result-title">分享链接</div>
             <div class="share-row">
-              <input id="shareUrl" readonly value="填写后才会生成分享链接" />
+              <input id="shareUrl" readonly value="请先生成包裹后再显示链接" />
               <button class="btn small" id="copyBtn" type="button">复制</button>
+            </div>
+            <div style="margin-top:12px;text-align:center;">
+              <button class="btn" id="buildBtn" disabled>生成包裹</button>
             </div>
             <div class="qr-wrap">
               <img id="qrCode" alt="礼物二维码" />
@@ -99,18 +99,23 @@
     const qrCodeImg = document.getElementById('qrCode');
     const buildBtn = document.getElementById('buildBtn');
     const helperText = document.getElementById('helperText');
+  let hasGenerated = false;
 
-    function updateGenerateState() {
-      const hasSender = senderInput.value.trim().length > 0;
-      const hasSelection = state.selected.length > 0 || state.inside.length > 0;
-      const canGenerate = hasSender || hasSelection;
-      buildBtn.disabled = !canGenerate;
-      helperText.textContent = canGenerate
-        ? '备注是可选的，寄件人或包裹内物件至少填一项。'
-        : '请输入寄件人，或至少放入一个小物件。';
+  function updateGenerateState() {
+    const hasSender = senderInput.value.trim().length > 0;
+    const hasSelection = state.selected.length > 0 || state.inside.length > 0;
+    const canGenerate = hasSender || hasSelection;
+    buildBtn.disabled = !canGenerate;
+    helperText.textContent = canGenerate
+      ? '填写收件人或选择至少一个小物件后，就可以生成包裹。'
+      : '请输入寄件人，或至少选择一个小物件。';
+    if (!hasGenerated) {
+      shareUrlInput.value = '请先生成包裹后再显示链接';
+      qrCodeImg.removeAttribute('src');
     }
+  }
 
-    function renderItemButtons() {
+  function renderItemButtons() {
       itemList.innerHTML = itemDefinitions.map((item) => `
         <button class="item-btn ${state.selected.includes(item.key) ? 'active' : ''}" data-item="${item.key}" type="button" draggable="true">
           <span class="item-icon"><img src="${item.image}" alt="${item.label}" /></span>
@@ -128,6 +133,7 @@
           }
           renderItemButtons();
           renderObjects();
+          if (hasGenerated) createShareLink();
         });
 
         btn.addEventListener('dragstart', (e) => {
@@ -172,19 +178,16 @@
     }
 
     function createShareLink() {
-      const sender = senderInput.value.trim();
-      const recipient = recipientInput.value.trim();
-      const message = messageInput.value.trim();
-      const items = state.inside.length ? state.inside.map(i => i.key) : state.selected;
-      const hasSender = sender.length > 0;
-      const hasRecipient = recipient.length > 0;
-      const hasSelection = items.length > 0;
-      if (!hasSender && !hasSelection) {
-        shareUrlInput.value = '填写后才会生成分享链接';
+      if (!hasGenerated) {
+        shareUrlInput.value = '请先生成包裹后再显示链接';
         qrCodeImg.removeAttribute('src');
         return;
       }
 
+      const sender = senderInput.value.trim();
+      const recipient = recipientInput.value.trim();
+      const message = messageInput.value.trim();
+      const items = state.inside.length ? state.inside.map(i => i.key) : state.selected;
       const url = new URL('gift.html', window.location.href);
       if (sender) url.searchParams.set('from', sender);
       if (recipient) url.searchParams.set('to', recipient);
@@ -200,7 +203,7 @@
     [senderInput, recipientInput, messageInput].forEach((input) => {
       input.addEventListener('input', () => {
         renderObjects();
-        createShareLink();
+        if (hasGenerated) createShareLink();
       });
     });
 
@@ -209,6 +212,7 @@
       const hasSender = sender.length > 0;
       const hasSelection = state.selected.length > 0 || state.inside.length > 0;
       if (!hasSender && !hasSelection) return;
+      hasGenerated = true;
       if (innerBox) {
         innerBox.classList.add('open');
         setTimeout(() => innerBox.classList.remove('open'), 500);
