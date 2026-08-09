@@ -157,10 +157,11 @@ textarea { min-height: 82px; resize: vertical; }
   top: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  display: block;
+  object-fit: contain;
   pointer-events: auto;
   opacity: 1;
-  z-index: 1;
+  z-index: 0;
 }
 .inner-box.open { transform: translateY(-6px); }
 
