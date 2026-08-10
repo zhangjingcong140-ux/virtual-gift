@@ -72,10 +72,9 @@
           <div class="form-group">
             <label>背景</label>
             <div class="cd-select-row">
-              <button id="openBackgroundPicker" class="btn small" type="button">选择背景</button>
               <span id="backgroundStatus" class="cd-status">未选择背景</span>
             </div>
-            <div class="cd-tip">点击按钮进入背景选择页，编辑完成后返回上页。</div>
+            <div class="cd-tip">背景功能已暂时停用。</div>
           </div>
           <div class="form-group">
             <label>小物件</label>
@@ -267,16 +266,17 @@
       }
       const saved = localStorage.getItem('virtualGiftSelectedCD');
       if (saved && cdMap[saved]) selectedCD = saved;
-      const savedBg = localStorage.getItem('virtualGiftSelectedBackground');
-      const clearedBg = localStorage.getItem('virtualGiftSelectedBackgroundCleared');
-      if (savedBg && backgroundOptions.some((bg) => bg.key === savedBg)) {
-        selectedBackground = savedBg;
-      } else if (clearedBg) {
-        selectedBackground = null;
-        localStorage.removeItem('virtualGiftSelectedBackgroundCleared');
-      } else if (draft.selectedBackground && backgroundOptions.some((bg) => bg.key === draft.selectedBackground)) {
-        selectedBackground = draft.selectedBackground;
-      }
+      // Background feature paused: ignore saved background
+      // const savedBg = localStorage.getItem('virtualGiftSelectedBackground');
+      // const clearedBg = localStorage.getItem('virtualGiftSelectedBackgroundCleared');
+      // if (savedBg && backgroundOptions.some((bg) => bg.key === savedBg)) {
+      //   selectedBackground = savedBg;
+      // } else if (clearedBg) {
+      //   selectedBackground = null;
+      //   localStorage.removeItem('virtualGiftSelectedBackgroundCleared');
+      // } else if (draft.selectedBackground && backgroundOptions.some((bg) => bg.key === draft.selectedBackground)) {
+      //   selectedBackground = draft.selectedBackground;
+      // }
     }
 
     function updateGenerateState() {
@@ -556,12 +556,7 @@
         window.location.href = './cd.html';
       });
     }
-    if (openBackgroundPickerBtn) {
-      openBackgroundPickerBtn.addEventListener('click', () => {
-        saveDraftToStorage();
-        window.location.href = './background.html';
-      });
-    }
+    // background picker button removed — feature paused
     // insert placeCdBtn next to cd status
     if (cdStatus && placeCdBtn) {
       cdStatus.parentNode.insertBefore(placeCdBtn, cdStatus.nextSibling);
