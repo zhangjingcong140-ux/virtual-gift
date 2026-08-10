@@ -49,6 +49,29 @@
       display: grid;
       place-items: center;
     }
+    .now-playing {
+      position: absolute;
+      top: -36px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: transparent;
+      z-index: 8;
+      transition: opacity .25s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .now-playing img { width: 100%; height: 100%; object-fit: contain; }
+    .now-playing.spin {
+      opacity: 1;
+      animation: spin 2s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: translateX(-50%) rotate(0deg); }
+      to { transform: translateX(-50%) rotate(360deg); }
+    }
     .gift-box img { width: 100%; height: 100%; object-fit: contain; }
     .message-card {
       margin: 14px 0 10px;
@@ -186,6 +209,7 @@
     <div class="gift-title">你收到一份神秘包裹</div>
     <div class="gift-subtitle">点击礼盒，看看里面藏了什么</div>
     <div class="gift-box loading" id="giftBox">
+      <div class="now-playing" id="nowPlayingCd"><img src="./cd.png" alt="CD" /></div>
       <img id="giftBoxImg" src="./box.png" alt="包裹" />
       <div class="loading-overlay" id="loadingOverlay">加载中...</div>
     </div>
@@ -325,9 +349,20 @@
           window.giftAudio.preload = 'auto';
         }
         window.giftAudio.currentTime = 0;
-        window.giftAudio.play().catch((err) => {
-          console.warn('音频播放失败:', err);
-        });
+        const nowEl = document.getElementById('nowPlayingCd');
+        const startPlay = () => {
+          window.giftAudio.play().then(() => {
+            if (nowEl) nowEl.classList.add('spin');
+          }).catch((err) => {
+            console.warn('音频播放失败:', err);
+            if (nowEl) nowEl.classList.remove('spin');
+          });
+        };
+        startPlay();
+        // keep UI in sync with audio state
+        window.giftAudio.addEventListener('play', () => { const el = document.getElementById('nowPlayingCd'); if (el) el.classList.add('spin'); });
+        window.giftAudio.addEventListener('pause', () => { const el = document.getElementById('nowPlayingCd'); if (el) el.classList.remove('spin'); });
+        window.giftAudio.addEventListener('ended', () => { const el = document.getElementById('nowPlayingCd'); if (el) el.classList.remove('spin'); });
       }
 
       const itemRow = document.getElementById('itemRow');
