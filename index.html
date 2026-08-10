@@ -75,8 +75,7 @@
               <button id="openBackgroundPicker" class="btn small" type="button">选择背景</button>
               <span id="backgroundStatus" class="cd-status">未选择背景</span>
             </div>
-            <div id="backgroundPicker" class="background-picker hidden"></div>
-            <div class="cd-tip">选择背景后，接收页面会显示为对应全屏背景。</div>
+            <div class="cd-tip">点击按钮进入背景选择页，编辑完成后返回上页。</div>
           </div>
           <div class="form-group">
             <label>小物件</label>
@@ -192,7 +191,6 @@
     const openCdPickerBtn = document.getElementById('openCdPicker');
     const openBackgroundPickerBtn = document.getElementById('openBackgroundPicker');
     const backgroundStatus = document.getElementById('backgroundStatus');
-    const backgroundPicker = document.getElementById('backgroundPicker');
     const cdStatus = document.getElementById('cdStatus');
     const placeCdBtn = document.createElement('button');
     placeCdBtn.id = 'placeCdBtn';
@@ -232,10 +230,11 @@
     }
 
     function loadDraftFromStorage() {
+      let draft = {};
       const raw = localStorage.getItem('virtualGiftDraft');
       if (raw) {
         try {
-          const draft = JSON.parse(raw);
+          draft = JSON.parse(raw) || {};
           if (draft.sender) senderInput.value = draft.sender;
           if (draft.recipient) recipientInput.value = draft.recipient;
           if (draft.message) messageInput.value = draft.message;
@@ -268,6 +267,16 @@
       }
       const saved = localStorage.getItem('virtualGiftSelectedCD');
       if (saved && cdMap[saved]) selectedCD = saved;
+      const savedBg = localStorage.getItem('virtualGiftSelectedBackground');
+      const clearedBg = localStorage.getItem('virtualGiftSelectedBackgroundCleared');
+      if (savedBg && backgroundOptions.some((bg) => bg.key === savedBg)) {
+        selectedBackground = savedBg;
+      } else if (clearedBg) {
+        selectedBackground = null;
+        localStorage.removeItem('virtualGiftSelectedBackgroundCleared');
+      } else if (draft.selectedBackground && backgroundOptions.some((bg) => bg.key === draft.selectedBackground)) {
+        selectedBackground = draft.selectedBackground;
+      }
     }
 
     function updateGenerateState() {
@@ -282,25 +291,6 @@
         shareUrlInput.value = '请先生成包裹后再显示链接';
         qrCodeImg.removeAttribute('src');
       }
-    }
-
-    function renderBackgroundPicker() {
-      if (!backgroundPicker) return;
-      backgroundPicker.innerHTML = backgroundOptions.map((bg) => `
-        <button type="button" class="background-card ${selectedBackground === bg.key ? 'active' : ''}" data-bg="${bg.key}">
-          <img src="${bg.image}" alt="${bg.label}" />
-          <span>${bg.label}</span>
-        </button>
-      `).join('');
-      Array.from(backgroundPicker.querySelectorAll('.background-card')).forEach((card) => {
-        card.addEventListener('click', () => {
-          selectedBackground = card.dataset.bg;
-          saveDraftToStorage();
-          renderBackgroundPicker();
-          renderObjects();
-          applyBackgroundPreview();
-        });
-      });
     }
 
     function applyBackgroundPreview() {
@@ -568,9 +558,8 @@
     }
     if (openBackgroundPickerBtn) {
       openBackgroundPickerBtn.addEventListener('click', () => {
-        if (!backgroundPicker) return;
-        backgroundPicker.classList.toggle('hidden');
-        renderBackgroundPicker();
+        saveDraftToStorage();
+        window.location.href = './background.html';
       });
     }
     // insert placeCdBtn next to cd status
@@ -655,7 +644,6 @@
     });
     loadDraftFromStorage();
     renderCardPicker();
-    renderBackgroundPicker();
     applyBackgroundPreview();
     updateCardState();
     renderItemButtons();
