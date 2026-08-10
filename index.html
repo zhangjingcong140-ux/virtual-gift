@@ -119,11 +119,17 @@
       { key: 'shit', label: '大便', image: './shit.png' },
       { key: 'firefly', label: '萤火虫', image: './firefly.png' },
       { key: 'confetti', label: '礼炮', image: './saluting_gun.png' },
-      { key: 'cake', label: '蛋糕', image: './cake.png' },
+      { key: 'cake', label: '蛋糕', image: './cake.png' }
+    ];
+
+    const hiddenItemDefinitions = [
       { key: 'orangecat', label: '橘猫', image: './more/cats/orangecat.png' },
       { key: 'graycat', label: '灰猫', image: './more/cats/graycat.png' },
       { key: 'whitecat', label: '白猫', image: './more/cats/whitecat.png' },
-      { key: 'cowcat', label: '奶牛猫', image: './more/cats/cowcat.png' }
+      { key: 'cowcat', label: '奶牛猫', image: './more/cats/cowcat.png' },
+      { key: 'yellowdog', label: '黄色小狗', image: './more/cats/dogs/yellowdog.png' },
+      { key: 'graydog', label: '灰色小狗', image: './more/cats/dogs/graydog.png' },
+      { key: 'charliedog', label: '查理狗', image: './more/cats/dogs/charliedog.png' }
     ];
 
     const cdOptions = [
@@ -137,7 +143,9 @@
       { key: 'aicuo', label: '爱错', image: './cd.png', audio: './CDs/aicuo.mp3' }
     ];
     const cdMap = Object.fromEntries(cdOptions.map((cd) => [cd.key, cd]));
-    const itemMap = Object.fromEntries(itemDefinitions.map((item) => [item.key, item]));
+    const itemMap = Object.fromEntries(
+      [...itemDefinitions, ...hiddenItemDefinitions].map((item) => [item.key, item])
+    );
     const cardMap = Object.fromEntries(cardTemplates.map((card) => [card.key, card]));
 
     const insideObjects = document.getElementById('insideObjects');
