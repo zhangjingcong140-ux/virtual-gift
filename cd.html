@@ -79,13 +79,8 @@
   <div class="page">
     <h1>选择CD</h1>
     <p>你可以放入最多一张CD，打开包裹时会自动播放这首歌。</p>
-    <div class="cd-card">
-      <img src="./cd.png" alt="CD" />
-      <h2>晴天</h2>
-      <p>这首歌会在收件人打开包裹时自动播放。</p>
-      <button id="selectCdBtn" class="btn">选择这张CD</button>
-      <div class="status" id="statusText">MP3将在此页面加载，避免主页面卡顿。</div>
-    </div>
+    <div id="cdListPlaceholder"></div>
+    <div class="status" id="statusText">MP3将在此页面加载，避免主页面卡顿。</div>
     <div class="actions">
       <button id="cancelBtn" class="btn button-secondary">返回编辑</button>
     </div>
@@ -158,7 +153,12 @@
     }
 
     cdList.forEach((cd) => listContainer.appendChild(createCdRow(cd)));
-    document.body.querySelector('.page').insertBefore(listContainer, document.body.querySelector('.actions'));
+    const placeholder = document.getElementById('cdListPlaceholder');
+    if (placeholder) {
+      placeholder.appendChild(listContainer);
+    } else {
+      document.body.querySelector('.page').insertBefore(listContainer, document.body.querySelector('.actions'));
+    }
 
     const cancelBtnEl = document.getElementById('cancelBtn');
     const statusText = document.getElementById('statusText');
