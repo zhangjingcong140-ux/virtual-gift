@@ -266,8 +266,23 @@
     }
   }
 
+  function getItemCounts(items) {
+    return items.reduce((counts, key) => {
+      counts[key] = (counts[key] || 0) + 1;
+      return counts;
+    }, {});
+  }
+
+  function formatItemSummary(items) {
+    const counts = getItemCounts(items);
+    return Object.entries(counts).map(([key, count]) => {
+      const label = itemMap[key]?.label || key;
+      return count > 1 ? `${label}×${count}` : label;
+    }).join('、');
+  }
+
   function renderItemButtons() {
-      itemList.innerHTML = itemDefinitions.map((item) => {
+      const buttonsHtml = itemDefinitions.map((item) => {
         const isActive = state.selected.includes(item.key);
         return `
         <button class="item-btn ${isActive ? 'active' : ''}" data-item="${item.key}" type="button" draggable="true">
@@ -276,8 +291,23 @@
         </button>
       `;
       }).join('');
+      const moreButton = `
+        <button class="item-btn more-btn" data-more="true" type="button">
+          <span class="item-icon">+</span>
+          <span>更多</span>
+        </button>
+      `;
+      itemList.innerHTML = buttonsHtml + moreButton;
 
       Array.from(itemList.querySelectorAll('.item-btn')).forEach((btn) => {
+        if (btn.dataset.more === 'true') {
+          btn.addEventListener('click', () => {
+            saveDraftToStorage();
+            window.location.href = './more.html';
+          });
+          return;
+        }
+
         btn.addEventListener('click', () => {
           const item = btn.dataset.item;
           if (state.selected.includes(item)) {
@@ -304,10 +334,10 @@
       const sender = senderInput.value.trim();
       const recipient = recipientInput.value.trim();
       const message = messageInput.value.trim();
-      const itemText = (state.inside.length ? state.inside.map(i => itemMap[i.key].label) : state.selected.map(i => itemMap[i].label)).join('、') || '还没有放入任何小物件';
+      const itemText = state.inside.length ? formatItemSummary(state.inside.map(i => i.key)) : formatItemSummary(state.selected);
       const cardText = placedCard ? `；已放入贺卡：${cardMap[placedCard.cardKey].label}` : '';
       const cdText = placedCD ? `；已放入CD：${cdMap[placedCD].label}` : '';
-      resultText.innerHTML = `寄件人：${sender || '尚未填写'}<br/>收件人：${recipient || '尚未填写'}<br/>备注：${message || '可选'}<br/>包裹内容：${itemText}${cardText}${cdText}`;
+      resultText.innerHTML = `寄件人：${sender || '尚未填写'}<br/>收件人：${recipient || '尚未填写'}<br/>备注：${message || '可选'}<br/>包裹内容：${itemText || '还没有放入任何小物件'}${cardText}${cdText}`;
       cdStatus.textContent = selectedCD ? `已选择 CD：${cdMap[selectedCD].label}` : '未选择 CD';
       // place button label reflect state
       if (selectedCD) {
@@ -322,13 +352,17 @@
 
     function renderPlacedList() {
       if (!placedList) return;
-      const rows = state.inside.map((it, idx) => `
-        <div class="placed-row" data-idx="${idx}">
-          <img src="${itemMap[it.key].image}" alt="${itemMap[it.key].label}" />
-          <div class="label">${itemMap[it.key].label}</div>
-          <button data-idx="${idx}" class="remove-btn">删除</button>
+      const counts = getItemCounts(state.inside.map((it) => it.key));
+      const rows = Object.entries(counts).map(([key, count]) => {
+        const item = itemMap[key];
+        return `
+        <div class="placed-row" data-key="${key}">
+          <img src="${item.image}" alt="${item.label}" />
+          <div class="label">${item.label}${count > 1 ? `×${count}` : ''}</div>
+          <button data-key="${key}" class="remove-btn">删除</button>
         </div>
-      `).join('');
+      `;
+      }).join('');
       const cardRow = placedCard ? `
         <div class="placed-row placed-card-row">
           <img src="${cardMap[placedCard.cardKey].image}" alt="贺卡" />
@@ -354,8 +388,9 @@
             placedCD = null;
             saveDraftToStorage();
           } else {
-            const idx = Number(btn.dataset.idx);
-            if (!Number.isFinite(idx)) return;
+            const key = btn.dataset.key;
+            const idx = state.inside.findIndex((item) => item.key === key);
+            if (idx === -1) return;
             state.inside.splice(idx, 1);
           }
           renderObjects();
