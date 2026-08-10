@@ -440,8 +440,7 @@
         items,
         card: placedCard ? placedCard.cardKey : null,
         cardText: placedCard ? placedCard.content : '',
-        cd: placedCD || null,
-        background: selectedBackground || null
+        cd: placedCD || null
       };
       return LZString.compressToEncodedURIComponent(JSON.stringify(payload));
     }
@@ -505,7 +504,6 @@
         window.location.href = './cd.html';
       });
     }
-    // background picker button removed — feature paused
     // insert placeCdBtn next to cd status
     if (cdStatus && placeCdBtn) {
       cdStatus.parentNode.insertBefore(placeCdBtn, cdStatus.nextSibling);

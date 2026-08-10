@@ -284,11 +284,6 @@
       yongbeijichangqingge: '用背脊唱情歌',
       yueding: '约定'
     };
-    const backgroundImages = {
-      foresthouse: './background/foresthouse.png',
-      room: './background/room.png',
-      skyandcloud: './background/skyandcloud.png'
-    };
 
     function decodeLegacyGiftData(text) {
       const binary = atob(text);
@@ -351,13 +346,6 @@
         }
         if (window.giftCard && window.giftCd) {
           cardNote.textContent = '你收到了一张贺卡和一张CD，打开包裹查看内容并播放音乐。';
-        }
-        if (gift.background && backgroundImages[gift.background]) {
-          document.body.style.backgroundImage = `linear-gradient(180deg, rgba(255,255,255,0.82), rgba(255,255,255,0.82)), url(${backgroundImages[gift.background]})`;
-          document.body.style.backgroundSize = 'cover';
-          document.body.style.backgroundPosition = 'center';
-          document.body.style.backgroundRepeat = 'no-repeat';
-          document.body.style.backgroundAttachment = 'fixed';
         }
         if (window.giftCd) {
           window.giftAudio = new Audio(`./CDs/${window.giftCd}.mp3`);
