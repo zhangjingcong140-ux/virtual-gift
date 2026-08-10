@@ -6,7 +6,6 @@
   <title>3D 神秘包裹</title>
   <link rel="stylesheet" href="./styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -129,7 +128,7 @@
     const messageInput = document.getElementById('message');
     const itemList = document.getElementById('itemList');
     const shareUrlInput = document.getElementById('shareUrl');
-    const qrCodeWrapper = document.getElementById('qrCode');
+    const qrCodeImg = document.getElementById('qrCode');
     const buildBtn = document.getElementById('buildBtn');
     const helperText = document.getElementById('helperText');
     const cardPicker = document.getElementById('cardPicker');
@@ -296,13 +295,8 @@
 
       const finalUrl = url.toString();
       shareUrlInput.value = finalUrl;
-      qrCodeWrapper.innerHTML = '';
-      new QRCode(qrCodeWrapper, {
-        text: finalUrl,
-        width: 220,
-        height: 220,
-        correctLevel: QRCode.CorrectLevel.L
-      });
+      qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(finalUrl)}`;
+      qrCodeImg.alt = '礼物二维码';
     }
 
 
