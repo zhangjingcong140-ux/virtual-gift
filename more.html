@@ -93,26 +93,34 @@
       }
     }
   </style>
+  <script>
+    function addMoreItem(itemKey) {
+      const extra = JSON.parse(localStorage.getItem('virtualGiftMoreItems') || '[]');
+      extra.push(itemKey);
+      localStorage.setItem('virtualGiftMoreItems', JSON.stringify(extra));
+      window.location.href = './index.html';
+    }
+  </script>
 </head>
 <body>
   <div class="page">
     <h1>更多小物件</h1>
-    <p>这是“更多”页面，后续你可以在这里添加新的可选小物件。当前仅作为入口页面存在。</p>
+    <p>点击即可将小物件加入包裹，返回编辑页面后会显示在可删除列表中。</p>
     <div class="item-grid">
-      <button class="item-btn" type="button">
-        <span class="item-icon">🐱</span>
+      <button class="item-btn" type="button" onclick="addMoreItem('orangecat')">
+        <span class="item-icon"><img src="./more/cats/orangecat.png" alt="橘猫" /></span>
         <span>橘猫</span>
       </button>
-      <button class="item-btn" type="button">
-        <span class="item-icon">🐈</span>
+      <button class="item-btn" type="button" onclick="addMoreItem('graycat')">
+        <span class="item-icon"><img src="./more/cats/graycat.png" alt="灰猫" /></span>
         <span>灰猫</span>
       </button>
-      <button class="item-btn" type="button">
-        <span class="item-icon">🐈‍⬛</span>
+      <button class="item-btn" type="button" onclick="addMoreItem('whitecat')">
+        <span class="item-icon"><img src="./more/cats/whitecat.png" alt="白猫" /></span>
         <span>白猫</span>
       </button>
-      <button class="item-btn" type="button">
-        <span class="item-icon">🐄</span>
+      <button class="item-btn" type="button" onclick="addMoreItem('cowcat')">
+        <span class="item-icon"><img src="./more/cats/cowcat.png" alt="奶牛猫" /></span>
         <span>奶牛猫</span>
       </button>
     </div>
