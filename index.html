@@ -112,9 +112,14 @@
       { key: 'shit', label: '大便', image: './shit.png' },
       { key: 'firefly', label: '萤火虫', image: './firefly.png' },
       { key: 'confetti', label: '礼炮', image: './saluting_gun.png' },
-      { key: 'cake', label: '蛋糕', image: './cake.png' }
+      { key: 'cake', label: '蛋糕', image: './cake.png' },
+      { key: 'cd', label: 'CD', image: './cd.png' }
     ];
 
+    const cdOptions = [
+      { key: 'qingtian', label: '晴天', image: './cd.png', audio: './CDs/qingtian.mp3' }
+    ];
+    const cdMap = Object.fromEntries(cdOptions.map((cd) => [cd.key, cd]));
     const itemMap = Object.fromEntries(itemDefinitions.map((item) => [item.key, item]));
     const cardMap = Object.fromEntries(cardTemplates.map((card) => [card.key, card]));
 
@@ -143,10 +148,53 @@
   let selectedCard = cardTemplates[0].key;
   let cardContent = '';
   let placedCard = null;
+  let selectedCD = null;
+
+  function saveSelectedCDToStorage() {
+    if (selectedCD) {
+      localStorage.setItem('virtualGiftSelectedCD', selectedCD);
+    } else {
+      localStorage.removeItem('virtualGiftSelectedCD');
+    }
+  }
+
+  function saveDraftToStorage() {
+    const draft = {
+      sender: senderInput.value,
+      recipient: recipientInput.value,
+      message: messageInput.value,
+      selected: state.selected,
+      inside: state.inside,
+      placedCard,
+      selectedCD,
+      selectedCard,
+      cardContent: cardContentInput.value
+    };
+    localStorage.setItem('virtualGiftDraft', JSON.stringify(draft));
+  }
+
+  function loadDraftFromStorage() {
+    const raw = localStorage.getItem('virtualGiftDraft');
+    if (!raw) return;
+    try {
+      const draft = JSON.parse(raw);
+      if (draft.sender) senderInput.value = draft.sender;
+      if (draft.recipient) recipientInput.value = draft.recipient;
+      if (draft.message) messageInput.value = draft.message;
+      if (Array.isArray(draft.selected)) state.selected = draft.selected;
+      if (Array.isArray(draft.inside)) state.inside = draft.inside;
+      if (draft.placedCard) placedCard = draft.placedCard;
+      if (draft.selectedCD && cdMap[draft.selectedCD]) selectedCD = draft.selectedCD;
+      if (draft.selectedCard && cardMap[draft.selectedCard]) selectedCard = draft.selectedCard;
+      if (typeof draft.cardContent === 'string') cardContentInput.value = draft.cardContent;
+    } catch (error) {
+      console.warn('无法读取草稿', error);
+    }
+  }
 
   function updateGenerateState() {
     const hasSender = senderInput.value.trim().length > 0;
-    const hasSelection = state.selected.length > 0 || state.inside.length > 0 || !!placedCard;
+    const hasSelection = state.selected.length > 0 || state.inside.length > 0 || !!placedCard || !!selectedCD;
     const canGenerate = hasSender || hasSelection;
     buildBtn.disabled = !canGenerate;
     helperText.textContent = canGenerate
@@ -191,16 +239,34 @@
   }
 
   function renderItemButtons() {
-      itemList.innerHTML = itemDefinitions.map((item) => `
-        <button class="item-btn ${state.selected.includes(item.key) ? 'active' : ''}" data-item="${item.key}" type="button" draggable="true">
+      itemList.innerHTML = itemDefinitions.map((item) => {
+        const isActive = state.selected.includes(item.key) || (item.key === 'cd' && !!selectedCD);
+        return `
+        <button class="item-btn ${isActive ? 'active' : ''}" data-item="${item.key}" type="button" draggable="${item.key !== 'cd'}">
           <span class="item-icon"><img src="${item.image}" alt="${item.label}" /></span>
           <span>${item.label}</span>
         </button>
-      `).join('');
+      `;
+      }).join('');
 
       Array.from(itemList.querySelectorAll('.item-btn')).forEach((btn) => {
         btn.addEventListener('click', () => {
           const item = btn.dataset.item;
+          if (item === 'cd') {
+            if (selectedCD) {
+              selectedCD = null;
+              saveSelectedCDToStorage();
+              renderItemButtons();
+              renderObjects();
+              renderPlacedList();
+              if (hasGenerated) void createShareLink();
+            } else {
+              saveDraftToStorage();
+              window.location.href = './cd.html';
+            }
+            return;
+          }
+
           if (state.selected.includes(item)) {
             state.selected = state.selected.filter((x) => x !== item);
           } else {
@@ -211,10 +277,12 @@
           if (hasGenerated) void createShareLink();
         });
 
-        btn.addEventListener('dragstart', (e) => {
-          e.dataTransfer.setData('text/plain', btn.dataset.item);
-          e.dataTransfer.effectAllowed = 'copy';
-        });
+        if (btn.dataset.item !== 'cd') {
+          btn.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', btn.dataset.item);
+            e.dataTransfer.effectAllowed = 'copy';
+          });
+        }
       });
     }
 
@@ -227,7 +295,8 @@
       const message = messageInput.value.trim();
       const itemText = (state.inside.length ? state.inside.map(i => itemMap[i.key].label) : state.selected.map(i => itemMap[i].label)).join('、') || '还没有放入任何小物件';
       const cardText = placedCard ? `；已放入贺卡：${cardMap[placedCard.cardKey].label}` : '';
-      resultText.innerHTML = `寄件人：${sender || '尚未填写'}<br/>收件人：${recipient || '尚未填写'}<br/>备注：${message || '可选'}<br/>包裹内容：${itemText}${cardText}`;
+      const cdText = selectedCD ? `；已放入CD：${cdMap[selectedCD].label}` : '';
+      resultText.innerHTML = `寄件人：${sender || '尚未填写'}<br/>收件人：${recipient || '尚未填写'}<br/>备注：${message || '可选'}<br/>包裹内容：${itemText}${cardText}${cdText}`;
       updateGenerateState();
     }
 
@@ -247,12 +316,22 @@
           <button data-card="remove" class="remove-btn">删除</button>
         </div>
       ` : '';
-      placedList.innerHTML = rows + cardRow;
+      const cdRow = selectedCD ? `
+        <div class="placed-row placed-card-row">
+          <img src="${cdMap[selectedCD].image}" alt="CD" />
+          <div class="label">CD：${cdMap[selectedCD].label}</div>
+          <button data-cd="remove" class="remove-btn">删除</button>
+        </div>
+      ` : '';
+      placedList.innerHTML = rows + cardRow + cdRow;
 
       Array.from(placedList.querySelectorAll('.remove-btn')).forEach((btn) => {
         btn.addEventListener('click', () => {
           if (btn.dataset.card === 'remove') {
             placedCard = null;
+          } else if (btn.dataset.cd === 'remove') {
+            selectedCD = null;
+            saveSelectedCDToStorage();
           } else {
             const idx = Number(btn.dataset.idx);
             if (!Number.isFinite(idx)) return;
@@ -260,7 +339,7 @@
           }
           renderObjects();
           renderPlacedList();
-          createShareLink();
+          if (hasGenerated) void createShareLink();
           updateCardState();
         });
       });
@@ -277,7 +356,8 @@
         message: message || '',
         items: items || [],
         card: placedCard ? placedCard.cardKey : null,
-        cardText: placedCard ? placedCard.content : ''
+        cardText: placedCard ? placedCard.content : '',
+        cd: selectedCD || null
       };
       return LZString.compressToEncodedURIComponent(JSON.stringify(payload));
     }
@@ -290,7 +370,7 @@
       }
 
       const compressedData = await Promise.resolve(serializeGiftPayload());
-      const url = new URL('gift.html', window.location.href);
+      const url = new URL('receive.html', window.location.href);
       url.searchParams.set('d', compressedData);
 
       const finalUrl = url.toString();
@@ -339,7 +419,7 @@
     document.getElementById('buildBtn').addEventListener('click', () => {
       const sender = senderInput.value.trim();
       const hasSender = sender.length > 0;
-      const hasSelection = state.selected.length > 0 || state.inside.length > 0 || !!placedCard;
+      const hasSelection = state.selected.length > 0 || state.inside.length > 0 || !!placedCard || !!selectedCD;
       if (!hasSender && !hasSelection) return;
       hasGenerated = true;
       if (innerBox) {
@@ -382,7 +462,7 @@
       e.preventDefault();
       if (!boxOpen) return; // only accept drops when box open
       const key = e.dataTransfer.getData('text/plain');
-      if (!key) return;
+      if (!key || key === 'cd') return;
       const rect = insideWrap.getBoundingClientRect();
       const itemW = 44;
       const x = Math.round(e.clientX - rect.left - itemW / 2);
@@ -392,6 +472,7 @@
       renderPlacedList();
       void createShareLink();
     });
+    loadDraftFromStorage();
     renderCardPicker();
     updateCardState();
     renderItemButtons();

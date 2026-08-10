@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>选择CD</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, #fff7f0 0%, #ffe6ef 45%, #f8f8ff 100%);
+      margin: 0;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .page {
+      width: min(100%, 520px);
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .page h1 {
+      margin: 0 0 14px;
+      color: #d63f63;
+      font-size: 26px;
+    }
+    .page p {
+      color: #6b7280;
+      line-height: 1.7;
+      margin: 0 0 22px;
+    }
+    .cd-card {
+      border: 1px solid #f2dbe5;
+      border-radius: 18px;
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+      align-items: center;
+      background: #fff7fb;
+    }
+    .cd-card img {
+      width: 160px;
+      height: 160px;
+      object-fit: contain;
+      margin: 0 auto;
+    }
+    .cd-card h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #2f2f2f;
+    }
+    .cd-card button {
+      width: 100%;
+    }
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .button-secondary {
+      background: #f8f5f8;
+      color: #6b7280;
+      border: 1px solid #e5dce2;
+    }
+    .status {
+      color: #6b7280;
+      font-size: 14px;
+      min-height: 1.4em;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>选择CD</h1>
+    <p>你可以放入最多一张CD，打开包裹时会自动播放这首歌。</p>
+    <div class="cd-card">
+      <img src="./cd.png" alt="CD" />
+      <h2>晴天</h2>
+      <p>这首歌会在收件人打开包裹时自动播放。</p>
+      <button id="selectCdBtn" class="btn">选择这张CD</button>
+      <div class="status" id="statusText">MP3将在此页面加载，避免主页面卡顿。</div>
+    </div>
+    <div class="actions">
+      <button id="cancelBtn" class="btn button-secondary">返回编辑</button>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'virtualGiftSelectedCD';
+    const selectedKey = 'qingtian';
+    const button = document.getElementById('selectCdBtn');
+    const statusText = document.getElementById('statusText');
+    const cancelBtn = document.getElementById('cancelBtn');
+    let audioLoaded = false;
+    let audio;
+
+    function initAudio() {
+      if (audioLoaded) return;
+      audio = new Audio('./CDs/qingtian.mp3');
+      audio.preload = 'auto';
+      audioLoaded = true;
+      statusText.textContent = '已加载 MP3 文件，准备选择。';
+    }
+
+    window.addEventListener('load', () => {
+      initAudio();
+    });
+
+    button.addEventListener('click', () => {
+      localStorage.setItem(STORAGE_KEY, selectedKey);
+      statusText.textContent = '已选中晴天 CD，3 秒后返回包裹编辑页。';
+      setTimeout(() => {
+        window.location.href = './index.html';
+      }, 800);
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      window.location.href = './index.html';
+    });
+  </script>
+</body>
+</html>

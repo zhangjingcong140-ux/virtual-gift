@@ -211,7 +211,8 @@
       shit: '<img src="./shit.png" alt="大便" />',
       firefly: '<img src="./firefly.png" alt="萤火虫" />',
       confetti: '<img src="./saluting_gun.png" alt="礼炮" />',
-      cake: '<img src="./cake.png" alt="蛋糕" />'
+      cake: '<img src="./cake.png" alt="蛋糕" />',
+      cd: '<img src="./cd.png" alt="CD" />'
     };
     const itemNames = {
       rose: '玫瑰',
@@ -219,7 +220,8 @@
       shit: '大便',
       firefly: '萤火虫',
       confetti: '礼炮',
-      cake: '蛋糕'
+      cake: '蛋糕',
+      cd: 'CD'
     };
 
     function decodeLegacyGiftData(text) {
@@ -240,8 +242,9 @@
       const items = (params.get('i') || '').split(',').filter(Boolean);
       const cardKey = params.get('card');
       const cardText = params.get('cardText') || '';
+      const giftCd = params.get('cd');
 
-      if (!compressedData && !legacyData && !sender && !recipient && !message && !legacyText && !items.length && !cardKey) {
+      if (!compressedData && !legacyData && !sender && !recipient && !message && !legacyText && !items.length && !cardKey && !giftCd) {
         document.getElementById('gift-message').textContent = '没有找到包裹信息哦！';
         return;
       }
@@ -266,6 +269,7 @@
         window.giftItems = gift.items || [];
         window.giftCard = gift.card || cardKey || null;
         window.giftCardText = gift.cardText || cardText || '';
+        window.giftCd = gift.cd || giftCd || null;
         const cardNote = document.getElementById('cardNote');
         const cardView = document.getElementById('cardView');
         const cardImg = document.getElementById('cardImg');
@@ -276,8 +280,15 @@
           cardTextEl.textContent = window.giftCardText || '未填写内容';
           cardView.classList.add('hidden');
         } else {
-          cardNote.textContent = '';
+          cardNote.textContent = window.giftCd ? '你收到了一张CD，打开包裹就会播放音乐。' : '';
           cardView.classList.add('hidden');
+        }
+        if (window.giftCard && window.giftCd) {
+          cardNote.textContent = '你收到了一张贺卡和一张CD，打开包裹查看内容并播放音乐。';
+        }
+        if (window.giftCd) {
+          window.giftAudio = new Audio(`./CDs/${window.giftCd}.mp3`);
+          window.giftAudio.preload = 'none';
         }
       } catch (error) {
         console.error(error);
@@ -303,6 +314,11 @@
       hasOpened = true;
       giftBox.classList.add('open');
       if (giftBoxImg) giftBoxImg.src = './box_open.png';
+      if (window.giftAudio) {
+        window.giftAudio.play().catch(() => {
+          // autoplay may be blocked in some browsers, but this is a user click so it should work.
+        });
+      }
 
       const itemRow = document.getElementById('itemRow');
       itemRow.innerHTML = '';
@@ -321,7 +337,13 @@
         el.innerHTML = `<img src="./cards/${window.giftCard}.png" alt="贺卡" /><div class="item-label">贺卡</div>`;
         itemRow.appendChild(el);
       }
-      if (!chips.length && !window.giftCard) return;
+      if (window.giftCd) {
+        const el = document.createElement('div');
+        el.className = 'item-chip';
+        el.innerHTML = `<img src="./cd.png" alt="CD" /><div class="item-label">CD：晴天</div>`;
+        itemRow.appendChild(el);
+      }
+      if (!chips.length && !window.giftCard && !window.giftCd) return;
 
       const cardView = document.getElementById('cardView');
       if (window.giftCard) cardView.classList.remove('hidden');
