@@ -269,15 +269,18 @@
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       try {
-        const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`, {
+        const response = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}`, {
           signal: controller.signal,
           cache: 'no-store'
         });
         if (!response.ok) {
           throw new Error(`短链接请求失败：${response.status}`);
         }
-        const text = await response.text();
-        return text.trim();
+        const json = await response.json();
+        if (!json || !json.shorturl) {
+          throw new Error('短链接响应格式异常');
+        }
+        return json.shorturl;
       } finally {
         clearTimeout(timeoutId);
       }
