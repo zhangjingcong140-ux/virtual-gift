@@ -70,6 +70,15 @@
             <div class="cd-tip">进入 CD 页面后才会加载音乐文件，避免主页面卡顿。</div>
           </div>
           <div class="form-group">
+            <label>背景</label>
+            <div class="cd-select-row">
+              <button id="openBackgroundPicker" class="btn small" type="button">选择背景</button>
+              <span id="backgroundStatus" class="cd-status">未选择背景</span>
+            </div>
+            <div id="backgroundPicker" class="background-picker hidden"></div>
+            <div class="cd-tip">选择背景后，接收页面会显示为对应全屏背景。</div>
+          </div>
+          <div class="form-group">
             <label>小物件</label>
             <div class="item-list" id="itemList"></div>
           </div>
@@ -132,6 +141,12 @@
       { key: 'charliedog', label: '查理狗', image: './more/cats/dogs/charliedog.png' }
     ];
 
+    const backgroundOptions = [
+      { key: 'foresthouse', label: '森林小屋', image: './background/foresthouse.png' },
+      { key: 'room', label: '温馨小房间', image: './background/room.png' },
+      { key: 'skyandcloud', label: '蓝天白云', image: './background/skyandcloud.png' }
+    ];
+
     const cdOptions = [
       { key: 'qingtian', label: '晴天', image: './cd.png', audio: './CDs/qingtian.mp3' },
       { key: 'luohualiushui', label: '落花流水', image: './cd.png', audio: './CDs/luohualiushui.mp3' },
@@ -175,6 +190,9 @@
     const cardCount = document.getElementById('cardCount');
     const placeCardBtn = document.getElementById('placeCardBtn');
     const openCdPickerBtn = document.getElementById('openCdPicker');
+    const openBackgroundPickerBtn = document.getElementById('openBackgroundPicker');
+    const backgroundStatus = document.getElementById('backgroundStatus');
+    const backgroundPicker = document.getElementById('backgroundPicker');
     const cdStatus = document.getElementById('cdStatus');
     const placeCdBtn = document.createElement('button');
     placeCdBtn.id = 'placeCdBtn';
@@ -187,6 +205,7 @@
     let placedCard = null;
     let selectedCD = null;
     let placedCD = null;
+    let selectedBackground = null;
 
     function saveSelectedCDToStorage() {
       if (selectedCD) {
@@ -206,6 +225,7 @@
         selectedCD,
         placedCD,
         selectedCard,
+        selectedBackground,
         cardContent: cardContentInput.value
       };
       localStorage.setItem('virtualGiftDraft', JSON.stringify(draft));
@@ -225,6 +245,9 @@
           if (draft.placedCD && cdMap[draft.placedCD]) placedCD = draft.placedCD;
           if (draft.selectedCard && cardMap[draft.selectedCard]) selectedCard = draft.selectedCard;
           if (typeof draft.cardContent === 'string') cardContentInput.value = draft.cardContent;
+          if (draft.selectedBackground && backgroundOptions.some((bg) => bg.key === draft.selectedBackground)) {
+            selectedBackground = draft.selectedBackground;
+          }
         } catch (error) {
           console.warn('无法读取草稿', error);
         }
@@ -248,40 +271,77 @@
     }
 
     function updateGenerateState() {
-    const hasSender = senderInput.value.trim().length > 0;
-    const hasSelection = state.inside.length > 0 || !!placedCard || !!placedCD;
-    const canGenerate = hasSender || hasSelection;
-    buildBtn.disabled = !canGenerate;
-    helperText.textContent = canGenerate
-      ? '填写收件人或选择至少一个小物件后，就可以生成包裹。'
-      : '请输入寄件人，或至少选择一个小物件。';
-    if (!hasGenerated) {
-      shareUrlInput.value = '请先生成包裹后再显示链接';
-      qrCodeImg.removeAttribute('src');
+      const hasSender = senderInput.value.trim().length > 0;
+      const hasSelection = state.inside.length > 0 || !!placedCard || !!placedCD;
+      const canGenerate = hasSender || hasSelection;
+      buildBtn.disabled = !canGenerate;
+      helperText.textContent = canGenerate
+        ? '填写收件人或选择至少一个小物件后，就可以生成包裹。'
+        : '请输入寄件人，或至少选择一个小物件。';
+      if (!hasGenerated) {
+        shareUrlInput.value = '请先生成包裹后再显示链接';
+        qrCodeImg.removeAttribute('src');
+      }
     }
-  }
 
-  function renderCardPicker() {
-    if (!cardStyleRow) return;
-    if (!selectedCard) selectedCard = cardTemplates[0].key;
-    cardPreviewImg.src = cardMap[selectedCard].image;
-    cardStyleRow.innerHTML = cardTemplates.map((card) => `
-      <button class="card-style ${selectedCard === card.key ? 'active' : ''}" data-card="${card.key}" type="button">
-        <img src="${card.image}" alt="贺卡样式" />
-      </button>
-    `).join('');
-
-    Array.from(cardStyleRow.querySelectorAll('.card-style')).forEach((btn) => {
-      btn.addEventListener('click', () => {
-        selectedCard = btn.dataset.card;
-        cardPreviewImg.src = cardMap[selectedCard].image;
-        renderCardPicker();
-        updateCardState();
+    function renderBackgroundPicker() {
+      if (!backgroundPicker) return;
+      backgroundPicker.innerHTML = backgroundOptions.map((bg) => `
+        <button type="button" class="background-card ${selectedBackground === bg.key ? 'active' : ''}" data-bg="${bg.key}">
+          <img src="${bg.image}" alt="${bg.label}" />
+          <span>${bg.label}</span>
+        </button>
+      `).join('');
+      Array.from(backgroundPicker.querySelectorAll('.background-card')).forEach((card) => {
+        card.addEventListener('click', () => {
+          selectedBackground = card.dataset.bg;
+          saveDraftToStorage();
+          renderBackgroundPicker();
+          renderObjects();
+          applyBackgroundPreview();
+        });
       });
-    });
-  }
+    }
 
-  function updateCardState() {
+    function applyBackgroundPreview() {
+      if (!selectedBackground) {
+        document.body.style.backgroundImage = '';
+        document.body.style.backgroundSize = '';
+        document.body.style.backgroundPosition = '';
+        document.body.style.backgroundRepeat = '';
+        document.body.style.backgroundAttachment = '';
+        return;
+      }
+      const bg = backgroundOptions.find((item) => item.key === selectedBackground);
+      if (!bg) return;
+      document.body.style.backgroundImage = `linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.75)), url(${bg.image})`;
+      document.body.style.backgroundSize = 'cover';
+      document.body.style.backgroundPosition = 'center';
+      document.body.style.backgroundRepeat = 'no-repeat';
+      document.body.style.backgroundAttachment = 'fixed';
+    }
+
+    function renderCardPicker() {
+      if (!cardStyleRow) return;
+      if (!selectedCard) selectedCard = cardTemplates[0].key;
+      cardPreviewImg.src = cardMap[selectedCard].image;
+      cardStyleRow.innerHTML = cardTemplates.map((card) => `
+        <button class="card-style ${selectedCard === card.key ? 'active' : ''}" data-card="${card.key}" type="button">
+          <img src="${card.image}" alt="贺卡样式" />
+        </button>
+      `).join('');
+
+      Array.from(cardStyleRow.querySelectorAll('.card-style')).forEach((btn) => {
+        btn.addEventListener('click', () => {
+          selectedCard = btn.dataset.card;
+          cardPreviewImg.src = cardMap[selectedCard].image;
+          renderCardPicker();
+          updateCardState();
+        });
+      });
+    }
+
+    function updateCardState() {
     cardContent = cardContentInput.value.trim().slice(0, 20);
     cardCount.textContent = `${cardContent.length}/20`;
     cardPreviewText.textContent = cardContent || '贺卡内容会显示在这里，最多20个字。';
@@ -361,8 +421,10 @@
       const itemText = formatItemSummary(state.inside.map((i) => i.key));
       const cardText = placedCard ? `；已放入贺卡：${cardMap[placedCard.cardKey].label}` : '';
       const cdText = placedCD ? `；已放入CD：${cdMap[placedCD].label}` : '';
-      resultText.innerHTML = `寄件人：${sender || '尚未填写'}<br/>收件人：${recipient || '尚未填写'}<br/>备注：${message || '可选'}<br/>包裹内容：${itemText || '还没有放入任何小物件'}${cardText}${cdText}`;
+      const bgText = selectedBackground ? `；已选背景：${backgroundOptions.find((bg) => bg.key === selectedBackground)?.label}` : '';
+      resultText.innerHTML = `寄件人：${sender || '尚未填写'}<br/>收件人：${recipient || '尚未填写'}<br/>备注：${message || '可选'}<br/>包裹内容：${itemText || '还没有放入任何小物件'}${cardText}${cdText}${bgText}`;
       cdStatus.textContent = selectedCD ? `已选择 CD：${cdMap[selectedCD].label}` : '未选择 CD';
+      backgroundStatus.textContent = selectedBackground ? `已选择背景：${backgroundOptions.find((bg) => bg.key === selectedBackground)?.label}` : '未选择背景';
       // place button label reflect state
       if (selectedCD) {
         placeCdBtn.disabled = false;
@@ -439,7 +501,8 @@
         items,
         card: placedCard ? placedCard.cardKey : null,
         cardText: placedCard ? placedCard.content : '',
-        cd: placedCD || null
+        cd: placedCD || null,
+        background: selectedBackground || null
       };
       return LZString.compressToEncodedURIComponent(JSON.stringify(payload));
     }
@@ -501,6 +564,13 @@
       openCdPickerBtn.addEventListener('click', () => {
         saveDraftToStorage();
         window.location.href = './cd.html';
+      });
+    }
+    if (openBackgroundPickerBtn) {
+      openBackgroundPickerBtn.addEventListener('click', () => {
+        if (!backgroundPicker) return;
+        backgroundPicker.classList.toggle('hidden');
+        renderBackgroundPicker();
       });
     }
     // insert placeCdBtn next to cd status
@@ -585,6 +655,8 @@
     });
     loadDraftFromStorage();
     renderCardPicker();
+    renderBackgroundPicker();
+    applyBackgroundPreview();
     updateCardState();
     renderItemButtons();
     renderObjects();
