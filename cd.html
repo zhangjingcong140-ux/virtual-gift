@@ -35,26 +35,49 @@
     }
     .cd-card {
       border: 1px solid #f2dbe5;
-      border-radius: 18px;
-      padding: 18px;
-      display: grid;
-      gap: 16px;
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      gap: 12px;
       align-items: center;
       background: #fff7fb;
     }
     .cd-card img {
-      width: 160px;
-      height: 160px;
+      width: 56px;
+      height: 56px;
       object-fit: contain;
-      margin: 0 auto;
+      flex: 0 0 56px;
+      border-radius: 6px;
+      background: white;
+      padding: 6px;
     }
-    .cd-card h2 {
+    .cd-meta {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .cd-meta h2 {
       margin: 0;
-      font-size: 20px;
+      font-size: 16px;
       color: #2f2f2f;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .cd-card button {
-      width: 100%;
+    .cd-meta p {
+      margin: 4px 0 0 0;
+      font-size: 13px;
+      color: #6b7280;
+    }
+    .cd-card .actions {
+      margin-top: 0;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex: 0 0 auto;
+    }
+    .cd-card .btn {
+      padding: 6px 10px;
+      font-size: 13px;
     }
     .actions {
       margin-top: 20px;
@@ -108,10 +131,16 @@
       const img = document.createElement('img');
       img.src = './cd.png';
       img.alt = cd.label;
+
+      const meta = document.createElement('div');
+      meta.className = 'cd-meta';
       const h2 = document.createElement('h2');
       h2.textContent = cd.label;
       const p = document.createElement('p');
       p.textContent = '点击试听或确认选择这张 CD。';
+      meta.appendChild(h2);
+      meta.appendChild(p);
+
       const actions = document.createElement('div');
       actions.className = 'actions';
       const playBtn = document.createElement('button');
@@ -119,13 +148,12 @@
       playBtn.textContent = '试听';
       const selectBtn = document.createElement('button');
       selectBtn.className = 'btn';
-      selectBtn.textContent = '选择这张CD';
+      selectBtn.textContent = '选择';
       actions.appendChild(playBtn);
       actions.appendChild(selectBtn);
+
+      // layout: img | meta (flex) | actions
       row.appendChild(img);
-      const meta = document.createElement('div');
-      meta.appendChild(h2);
-      meta.appendChild(p);
       row.appendChild(meta);
       row.appendChild(actions);
 
@@ -146,7 +174,7 @@
         statusText.textContent = `已选中 ${cd.label}，即将返回编辑页`;
         setTimeout(() => {
           window.location.href = './index.html';
-        }, 600);
+        }, 400);
       });
 
       return row;
