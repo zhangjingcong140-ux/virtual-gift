@@ -104,9 +104,7 @@
     <p>你可以放入最多一张CD，打开包裹时会自动播放这首歌。</p>
     <div id="cdListPlaceholder"></div>
     <div class="status" id="statusText">MP3将在此页面加载，避免主页面卡顿。</div>
-    <div class="actions">
-      <button id="cancelBtn" class="btn button-secondary">返回编辑</button>
-    </div>
+    <!-- per-row 返回按钮 will be shown on each CD row; removed global return button -->
   </div>
 
   <script>
@@ -149,8 +147,12 @@
       const selectBtn = document.createElement('button');
       selectBtn.className = 'btn';
       selectBtn.textContent = '选择';
+      const backBtn = document.createElement('button');
+      backBtn.className = 'btn button-secondary';
+      backBtn.textContent = '返回编辑';
       actions.appendChild(playBtn);
       actions.appendChild(selectBtn);
+      actions.appendChild(backBtn);
 
       // layout: img | meta (flex) | actions
       row.appendChild(img);
@@ -171,10 +173,11 @@
       selectBtn.addEventListener('click', () => {
         localStorage.setItem(STORAGE_KEY, cd.key);
         currentSelection = cd.key;
-        statusText.textContent = `已选中 ${cd.label}，即将返回编辑页`;
-        setTimeout(() => {
-          window.location.href = './index.html';
-        }, 400);
+        statusText.textContent = `已选中 ${cd.label}，请按右侧的【返回编辑】返回上页以放入包裹`;
+      });
+
+      backBtn.addEventListener('click', () => {
+        window.location.href = './index.html';
       });
 
       return row;
