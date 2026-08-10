@@ -120,6 +120,21 @@ body {
 .item-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--cream); display: grid; place-items: center; padding: 6px; }
 .item-icon img, .object-item img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .form-group { margin-bottom: 12px; }
+.cd-select-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cd-status {
+  color: #9f6c8f;
+  font-size: 13px;
+}
+.cd-tip {
+  margin-top: 8px;
+  color: #8b5f73;
+  font-size: 12px;
+}
 label { display: block; font-weight: 700; margin-bottom: 6px; color: #4b5563; }
 input, textarea, select {
   width: 100%;

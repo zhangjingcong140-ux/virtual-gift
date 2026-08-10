@@ -288,7 +288,7 @@
         }
         if (window.giftCd) {
           window.giftAudio = new Audio(`./CDs/${window.giftCd}.mp3`);
-          window.giftAudio.preload = 'none';
+          window.giftAudio.preload = 'auto';
         }
       } catch (error) {
         console.error(error);
@@ -314,9 +314,14 @@
       hasOpened = true;
       giftBox.classList.add('open');
       if (giftBoxImg) giftBoxImg.src = './box_open.png';
-      if (window.giftAudio) {
-        window.giftAudio.play().catch(() => {
-          // autoplay may be blocked in some browsers, but this is a user click so it should work.
+      if (window.giftCd) {
+        if (!window.giftAudio) {
+          window.giftAudio = new Audio(`./CDs/${window.giftCd}.mp3`);
+          window.giftAudio.preload = 'auto';
+        }
+        window.giftAudio.currentTime = 0;
+        window.giftAudio.play().catch((err) => {
+          console.warn('音频播放失败:', err);
         });
       }
 
