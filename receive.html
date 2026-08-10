@@ -24,14 +24,15 @@
     .gift-card {
       position: relative;
       width: min(100%, 460px);
-      background: rgba(255, 255, 255, 0.64);
-      border: 1px solid rgba(255,255,255,0.62);
-      backdrop-filter: blur(28px);
+      background: transparent;
+      border: none;
+      backdrop-filter: blur(18px);
       border-radius: 24px;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.16);
+      box-shadow: 0 18px 48px rgba(0,0,0,0.16);
       padding: 28px 24px;
       text-align: center;
       z-index: 2;
+      pointer-events: auto;
     }
     .gift-title {
       font-size: 24px;
@@ -81,8 +82,8 @@
       margin: 14px 0 10px;
       padding: 12px;
       border-radius: 14px;
-      background: #fff7fb;
-      border: 1px dashed #e7c8d7;
+      background: transparent;
+      border: none;
       color: #4b5563;
       line-height: 1.6;
     }
@@ -109,8 +110,8 @@
       width: 72px;
       height: 92px;
       border-radius: 14px;
-      background: #fff7fb;
-      border: 1px dashed #e8d0dc;
+      background: transparent;
+      border: none;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -121,7 +122,7 @@
       visibility: hidden;
       transform: translate(-50%, -50%) scale(0.8);
       transition: all .45s cubic-bezier(.2,.8,.2,1);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+      box-shadow: none;
       z-index: 5;
       pointer-events: none;
     }
@@ -146,8 +147,8 @@
       margin-top: 14px;
       padding: 14px;
       border-radius: 18px;
-      background: #fff7fb;
-      border: 1px dashed #e8d0dc;
+      background: transparent;
+      border: none;
       text-align: center;
     }
     .card-note {
@@ -174,8 +175,8 @@
       max-width: 280px;
       padding: 12px 14px;
       border-radius: 14px;
-      background: white;
-      border: 1px solid #f2dbe5;
+      background: transparent;
+      border: none;
       color: #4b5563;
       font-size: 14px;
       line-height: 1.6;
