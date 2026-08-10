@@ -223,6 +223,11 @@
       cake: '蛋糕',
       cd: 'CD'
     };
+    const cdLabels = {
+      qingtian: '晴天',
+      luohualiushui: '落花流水',
+      jifenzhiji: '几分之几'
+    };
 
     function decodeLegacyGiftData(text) {
       const binary = atob(text);
@@ -345,7 +350,8 @@
       if (window.giftCd) {
         const el = document.createElement('div');
         el.className = 'item-chip';
-        el.innerHTML = `<img src="./cd.png" alt="CD" /><div class="item-label">CD：晴天</div>`;
+        const label = cdLabels[window.giftCd] || 'CD';
+        el.innerHTML = `<img src="./cd.png" alt="CD" /><div class="item-label">CD：${label}</div>`;
         itemRow.appendChild(el);
       }
       if (!chips.length && !window.giftCard && !window.giftCd) return;

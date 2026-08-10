@@ -93,36 +93,76 @@
 
   <script>
     const STORAGE_KEY = 'virtualGiftSelectedCD';
-    const selectedKey = 'qingtian';
-    const button = document.getElementById('selectCdBtn');
-    const statusText = document.getElementById('statusText');
-    const cancelBtn = document.getElementById('cancelBtn');
-    let audioLoaded = false;
-    let audio;
+    const cdList = [
+      { key: 'qingtian', label: '晴天', file: './CDs/qingtian.mp3' },
+      { key: 'luohualiushui', label: '落花流水', file: './CDs/luohualiushui.mp3' },
+      { key: 'jifenzhiji', label: '几分之几', file: './CDs/jifenzhiji.mp3' }
+    ];
 
-    function initAudio() {
-      if (audioLoaded) return;
-      audio = new Audio('./CDs/qingtian.mp3');
-      audio.preload = 'auto';
-      audioLoaded = true;
-      statusText.textContent = '已加载 MP3 文件，准备选择。';
+    const listContainer = document.createElement('div');
+    listContainer.style.display = 'grid';
+    listContainer.style.gap = '12px';
+    listContainer.style.marginTop = '14px';
+
+    let previewAudio = null;
+    let currentSelection = null;
+
+    function createCdRow(cd) {
+      const row = document.createElement('div');
+      row.className = 'cd-card';
+      const img = document.createElement('img');
+      img.src = './cd.png';
+      img.alt = cd.label;
+      const h2 = document.createElement('h2');
+      h2.textContent = cd.label;
+      const p = document.createElement('p');
+      p.textContent = '点击试听或确认选择这张 CD。';
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+      const playBtn = document.createElement('button');
+      playBtn.className = 'btn';
+      playBtn.textContent = '试听';
+      const selectBtn = document.createElement('button');
+      selectBtn.className = 'btn';
+      selectBtn.textContent = '选择这张CD';
+      actions.appendChild(playBtn);
+      actions.appendChild(selectBtn);
+      row.appendChild(img);
+      const meta = document.createElement('div');
+      meta.appendChild(h2);
+      meta.appendChild(p);
+      row.appendChild(meta);
+      row.appendChild(actions);
+
+      playBtn.addEventListener('click', () => {
+        if (previewAudio) {
+          previewAudio.pause();
+          previewAudio = null;
+        }
+        previewAudio = new Audio(cd.file);
+        previewAudio.preload = 'auto';
+        previewAudio.currentTime = 0;
+        previewAudio.play().catch(() => {});
+      });
+
+      selectBtn.addEventListener('click', () => {
+        localStorage.setItem(STORAGE_KEY, cd.key);
+        currentSelection = cd.key;
+        statusText.textContent = `已选中 ${cd.label}，即将返回编辑页`;
+        setTimeout(() => {
+          window.location.href = './index.html';
+        }, 600);
+      });
+
+      return row;
     }
 
-    window.addEventListener('load', () => {
-      initAudio();
-    });
+    cdList.forEach((cd) => listContainer.appendChild(createCdRow(cd)));
+    document.body.querySelector('.page').insertBefore(listContainer, document.body.querySelector('.actions'));
 
-    button.addEventListener('click', () => {
-      localStorage.setItem(STORAGE_KEY, selectedKey);
-      statusText.textContent = '已选中晴天 CD，3 秒后返回包裹编辑页。';
-      setTimeout(() => {
-        window.location.href = './index.html';
-      }, 800);
-    });
-
-    cancelBtn.addEventListener('click', () => {
-      window.location.href = './index.html';
-    });
+    const cancelBtnEl = document.getElementById('cancelBtn');
+    const statusText = document.getElementById('statusText');
+    if (cancelBtnEl) cancelBtnEl.addEventListener('click', () => { window.location.href = './index.html'; });
   </script>
 </body>
 </html>
