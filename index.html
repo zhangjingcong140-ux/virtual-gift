@@ -202,18 +202,17 @@
         if (Array.isArray(draft.selected)) state.selected = draft.selected;
         if (Array.isArray(draft.inside)) state.inside = draft.inside;
         if (draft.placedCard) placedCard = draft.placedCard;
-        if (draft.selectedCD && cdMap[draft.selectedCD]) selectedCD = draft.selectedCD;
-        if (draft.placedCD && cdMap[draft.placedCD]) placedCD = draft.placedCD;
+          if (draft.selectedCD && cdMap[draft.selectedCD]) selectedCD = draft.selectedCD;
+          if (draft.placedCD && cdMap[draft.placedCD]) placedCD = draft.placedCD;
         if (draft.selectedCard && cardMap[draft.selectedCard]) selectedCard = draft.selectedCard;
         if (typeof draft.cardContent === 'string') cardContentInput.value = draft.cardContent;
       } catch (error) {
         console.warn('无法读取草稿', error);
       }
     }
-    if (!selectedCD) {
-      const saved = localStorage.getItem('virtualGiftSelectedCD');
-      if (saved && cdMap[saved]) selectedCD = saved;
-    }
+    // Prefer an explicit selection from the CD page (localStorage key) over stale draft
+    const saved = localStorage.getItem('virtualGiftSelectedCD');
+    if (saved && cdMap[saved]) selectedCD = saved;
   }
 
   function updateGenerateState() {
