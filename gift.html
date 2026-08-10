@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>你收到一份神秘包裹</title>
+  <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
   <style>
     :root {
       color-scheme: light;
@@ -229,23 +230,33 @@
 
     window.onload = function () {
       const params = new URLSearchParams(window.location.search);
+      const compressedData = params.get('d');
       const legacyData = params.get('data');
       const sender = params.get('from') || params.get('r');
       const recipient = params.get('to') || params.get('t');
       const message = params.get('m');
+      const legacyText = params.get('text');
       const style = params.get('s');
       const items = (params.get('i') || '').split(',').filter(Boolean);
       const cardKey = params.get('card');
       const cardText = params.get('cardText') || '';
 
-      if (!legacyData && !sender && !recipient && !message && !items.length && !cardKey) {
+      if (!compressedData && !legacyData && !sender && !recipient && !message && !legacyText && !items.length && !cardKey) {
         document.getElementById('gift-message').textContent = '没有找到包裹信息哦！';
         return;
       }
 
       try {
-        let gift = legacyData ? decodeLegacyGiftData(legacyData) : { sender, recipient, message, style, items };
-        // backward compatibility: older payloads may have used `recipient` as the sender
+        let gift;
+        if (compressedData) {
+          const decompressed = LZString.decompressFromEncodedURIComponent(compressedData);
+          gift = decompressed ? JSON.parse(decompressed) : null;
+        } else if (legacyData) {
+          gift = decodeLegacyGiftData(legacyData);
+        } else {
+          gift = { sender, recipient, message: legacyText || message || '', style, items, card: cardKey, cardText };
+        }
+        if (!gift) throw new Error('无法解析包裹信息');
         if (!gift.sender && gift.recipient && !params.get('to')) gift.sender = gift.recipient;
         document.getElementById('sender-name').textContent = `来自：${gift.sender || '神秘好友'}`;
         document.getElementById('recipient-name').textContent = `致：${gift.recipient || ''}`;
