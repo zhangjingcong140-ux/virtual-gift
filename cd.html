@@ -179,11 +179,29 @@
     listContainer.style.marginTop = '14px';
 
     let previewAudio = null;
-    let currentSelection = null;
+    let currentSelection = localStorage.getItem(STORAGE_KEY);
+    const statusText = document.getElementById('statusText');
+
+    function updateSelectionState() {
+      document.querySelectorAll('.cd-card').forEach((row) => {
+        const btn = row.querySelector('.select-btn');
+        if (!btn) return;
+        const isSelected = row.dataset.cdKey === currentSelection;
+        btn.textContent = isSelected ? '已选择' : '选择';
+        btn.disabled = isSelected;
+      });
+      if (statusText && currentSelection) {
+        const selectedCd = cdList.find((cd) => cd.key === currentSelection);
+        if (selectedCd) {
+          statusText.textContent = `已选中 ${selectedCd.label}，请按右侧的【返回编辑】返回上页以放入包裹`;
+        }
+      }
+    }
 
     function createCdRow(cd) {
       const row = document.createElement('div');
       row.className = 'cd-card';
+      row.dataset.cdKey = cd.key;
       const img = document.createElement('img');
       img.src = './cd.png';
       img.alt = cd.label;
@@ -203,8 +221,9 @@
       playBtn.className = 'btn';
       playBtn.textContent = '试听';
       const selectBtn = document.createElement('button');
-      selectBtn.className = 'btn';
-      selectBtn.textContent = '选择';
+      selectBtn.className = 'btn select-btn';
+      selectBtn.textContent = currentSelection === cd.key ? '已选择' : '选择';
+      selectBtn.disabled = currentSelection === cd.key;
       const backBtn = document.createElement('button');
       backBtn.className = 'btn button-secondary';
       backBtn.textContent = '返回编辑';
@@ -232,6 +251,7 @@
         localStorage.setItem(STORAGE_KEY, cd.key);
         currentSelection = cd.key;
         statusText.textContent = `已选中 ${cd.label}，请按右侧的【返回编辑】返回上页以放入包裹`;
+        updateSelectionState();
       });
 
       backBtn.addEventListener('click', () => {
@@ -249,8 +269,9 @@
       document.body.querySelector('.page').insertBefore(listContainer, document.body.querySelector('.actions'));
     }
 
+    updateSelectionState();
+
     const cancelBtnEl = document.getElementById('cancelBtn');
-    const statusText = document.getElementById('statusText');
     if (cancelBtnEl) cancelBtnEl.addEventListener('click', () => { window.location.href = './index.html'; });
   </script>
 </body>
