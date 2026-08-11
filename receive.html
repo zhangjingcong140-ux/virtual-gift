@@ -133,6 +133,21 @@
       transform: translate(0, 0) scale(1);
     }
     .item-chip img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .top-left-btn {
+      position: fixed;
+      left: 16px;
+      top: 16px;
+      z-index: 30;
+      background: white;
+      color: #d63f63;
+      border: 1px solid #f2dbe5;
+      padding: 8px 12px;
+      border-radius: 12px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+    }
     .item-chip img { width: 56px; height: 56px; object-fit: contain; display: block; }
     .item-label {
       font-size: 12px;
@@ -213,6 +228,7 @@
   </style>
 </head>
 <body>
+  <a href="./index.html" class="top-left-btn">制作包裹</a>
   <div class="gift-card">
     <div class="gift-title">你收到一份神秘包裹</div>
     <div class="gift-subtitle">点击礼盒，看看里面藏了什么</div>
