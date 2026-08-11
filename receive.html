@@ -381,7 +381,9 @@
       if (hasOpened) return;
       hasOpened = true;
       giftBox.classList.add('open');
-      if (giftBoxImg) giftBoxImg.src = './box_open.png';
+      const petKeys = ['orangecat', 'graycat', 'whitecat', 'cowcat', 'yellowdog', 'graydog', 'charliedog'];
+      const hasPet = (window.giftItems || []).some((item) => petKeys.includes(item));
+      if (giftBoxImg) giftBoxImg.src = hasPet ? './petbox.png' : './box_open.png';
       if (window.giftCd) {
         if (!window.giftAudio) {
           window.giftAudio = new Audio(`./CDs/${window.giftCd}.mp3`);
