@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>选择箱子样式</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, #fff7f0 0%, #ffe6ef 45%, #f8f8ff 100%);
+      margin: 0;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .page {
+      width: min(100%, 680px);
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .page h1 {
+      margin: 0 0 14px;
+      color: #d63f63;
+      font-size: 32px;
+    }
+    .page p {
+      color: #6b7280;
+      margin: 0 0 24px;
+      font-size: 16px;
+      line-height: 1.75;
+    }
+    .style-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .style-card {
+      border: 1px solid #f0e9f2;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 12px 25px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      gap: 10px;
+    }
+    .style-card.selected {
+      border-color: #d63f63;
+      box-shadow: 0 16px 30px rgba(214,63,99,0.15);
+    }
+    .style-card img {
+      width: 100%;
+      max-width: 160px;
+      border-radius: 16px;
+      background: #f9f6f8;
+      object-fit: contain;
+    }
+    .style-card h2 {
+      margin: 0;
+      color: #2f2f2f;
+      font-size: 18px;
+    }
+    .style-card p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .button-secondary {
+      background: #f8f5f8;
+      color: #6b7280;
+      border: 1px solid #e5dce2;
+    }
+    @media (max-width: 680px) {
+      .style-grid {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>选择箱子样式</h1>
+    <p>选一个你喜欢的包裹外观，返回编辑时会保留你的选择。</p>
+    <div class="style-grid" id="styleGrid"></div>
+    <div class="controls">
+      <button class="btn button-secondary" id="cancelBtn" type="button">返回编辑</button>
+    </div>
+  </div>
+  <script>
+    const STORAGE_KEY = 'virtualGiftSelectedBoxStyle';
+    const styles = [
+      {
+        key: 'classic',
+        label: '经典',
+        description: '默认经典礼盒风格',
+        image: './box.png'
+      },
+      {
+        key: 'leather',
+        label: '皮革款',
+        description: '质感皮革包裹',
+        image: './leatherbox.png'
+      },
+      {
+        key: 'mc',
+        label: 'MC箱子',
+        description: '方块风格 MC 箱子',
+        image: './mcbox.png'
+      }
+    ];
+
+    const current = localStorage.getItem(STORAGE_KEY) || 'classic';
+    const styleGrid = document.getElementById('styleGrid');
+
+    styles.forEach((style) => {
+      const card = document.createElement('div');
+      card.className = 'style-card' + (style.key === current ? ' selected' : '');
+      card.dataset.style = style.key;
+      card.innerHTML = `
+        <img src="${style.image}" alt="${style.label}" />
+        <h2>${style.label}</h2>
+        <p>${style.description}</p>
+        <div class="actions">
+          <button class="btn select-style-btn" type="button">${style.key === current ? '当前样式' : '选择'}</button>
+        </div>
+      `;
+      styleGrid.appendChild(card);
+    });
+
+    styleGrid.addEventListener('click', (event) => {
+      const button = event.target.closest('.select-style-btn');
+      if (!button) return;
+      const card = button.closest('.style-card');
+      if (!card) return;
+      const selected = card.dataset.style;
+      localStorage.setItem(STORAGE_KEY, selected);
+      window.location.href = './index.html';
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+      window.location.href = './index.html';
+    });
+  </script>
+</body>
+</html>

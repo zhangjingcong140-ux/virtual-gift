@@ -273,6 +273,23 @@
       violet: '<img src="./more/violet.png" alt="紫罗兰" />',
       cd: '<img src="./cd.png" alt="CD" />'
     };
+    const boxStyleMap = {
+      classic: {
+        closed: './box.png',
+        open: './box_open.png',
+        pet: './petbox.png'
+      },
+      leather: {
+        closed: './leatherbox.png',
+        open: './leatherbox_open.png',
+        pet: './petleatherbox.png'
+      },
+      mc: {
+        closed: './mcbox.png',
+        open: './mcbox_open.png',
+        pet: './petmcbox.png'
+      }
+    };
     const itemNames = {
       rose: '玫瑰',
       bug: '虫子',
@@ -331,6 +348,7 @@
       const cardKey = params.get('card');
       const cardText = params.get('cardText') || '';
       const giftCd = params.get('cd');
+      const boxStyleParam = params.get('boxStyle');
 
       if (!compressedData && !legacyData && !sender && !recipient && !message && !legacyText && !items.length && !cardKey && !giftCd) {
         document.getElementById('gift-message').textContent = '没有找到包裹信息哦！';
@@ -352,6 +370,9 @@
         document.getElementById('sender-name').textContent = `来自：${gift.sender || '神秘好友'}`;
         document.getElementById('recipient-name').textContent = `致：${gift.recipient || ''}`;
         document.getElementById('gift-message').textContent = '备注：' + (gift.message || '这个包裹里没有写备注。');
+        window.giftBoxStyle = gift.boxStyle || boxStyleParam || gift.style || 'classic';
+        const currentStyle = boxStyleMap[window.giftBoxStyle] || boxStyleMap.classic;
+        if (giftBoxImg) giftBoxImg.src = currentStyle.closed;
         const itemRow = document.getElementById('itemRow');
         itemRow.innerHTML = '';
         window.giftItems = gift.items || [];
@@ -403,7 +424,8 @@
       giftBox.classList.add('open');
       const petKeys = ['orangecat', 'graycat', 'whitecat', 'cowcat', 'yellowdog', 'graydog', 'charliedog'];
       const hasPet = (window.giftItems || []).some((item) => petKeys.includes(item));
-      if (giftBoxImg) giftBoxImg.src = hasPet ? './petbox.png' : './box_open.png';
+      const currentStyle = boxStyleMap[window.giftBoxStyle] || boxStyleMap.classic;
+      if (giftBoxImg) giftBoxImg.src = hasPet ? currentStyle.pet : currentStyle.open;
       if (window.giftCd) {
         if (!window.giftAudio) {
           window.giftAudio = new Audio(`./CDs/${window.giftCd}.mp3`);

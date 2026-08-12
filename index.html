@@ -26,6 +26,9 @@
               <div id="insideObjects" class="items-layer" aria-hidden="true"></div>
             </div>
           </div>
+          <div class="box-controls" style="margin-top: 12px; text-align: center;">
+            <button class="btn small" id="changeBoxStyleBtn" type="button">更改箱子样式</button>
+          </div>
           <div id="placedList" class="placed-list"></div>
         </div>
 
@@ -159,6 +162,23 @@
       { key: 'aihenjiandan', label: '爱很简单', image: './cd.png', audio: './CDs/aihenjiandan.mp3' },
       { key: 'shimianmaifu', label: '十面埋伏', image: './cd.png', audio: './CDs/shimianmaifu.mp3' }
     ];
+    const boxStyles = {
+      classic: {
+        closed: './box.png',
+        open: './box_open.png',
+        pet: './petbox.png'
+      },
+      leather: {
+        closed: './leatherbox.png',
+        open: './leatherbox_open.png',
+        pet: './petleatherbox.png'
+      },
+      mc: {
+        closed: './mcbox.png',
+        open: './mcbox_open.png',
+        pet: './petmcbox.png'
+      }
+    };
     const cdMap = Object.fromEntries(cdOptions.map((cd) => [cd.key, cd]));
     const itemMap = Object.fromEntries(
       [...itemDefinitions, ...hiddenItemDefinitions].map((item) => [item.key, item])
@@ -199,12 +219,21 @@
     let placedCard = null;
     let selectedCD = null;
     let placedCD = null;
+    let selectedBoxStyle = 'classic';
 
     function saveSelectedCDToStorage() {
       if (selectedCD) {
         localStorage.setItem('virtualGiftSelectedCD', selectedCD);
       } else {
         localStorage.removeItem('virtualGiftSelectedCD');
+      }
+    }
+
+    function saveSelectedBoxStyleToStorage() {
+      if (selectedBoxStyle) {
+        localStorage.setItem('virtualGiftSelectedBoxStyle', selectedBoxStyle);
+      } else {
+        localStorage.removeItem('virtualGiftSelectedBoxStyle');
       }
     }
 
@@ -218,7 +247,8 @@
         selectedCD,
         placedCD,
         selectedCard,
-        cardContent: cardContentInput.value
+        cardContent: cardContentInput.value,
+        boxStyle: selectedBoxStyle
       };
       localStorage.setItem('virtualGiftDraft', JSON.stringify(draft));
     }
@@ -233,8 +263,10 @@
       recipientInput.value = '';
       messageInput.value = '';
       cardContentInput.value = '';
+      selectedBoxStyle = 'classic';
       hasGenerated = false;
       saveSelectedCDToStorage();
+      saveSelectedBoxStyleToStorage();
       saveDraftToStorage();
       renderObjects();
       renderPlacedList();
@@ -261,6 +293,7 @@
           if (draft.placedCD && cdMap[draft.placedCD]) placedCD = draft.placedCD;
           if (draft.selectedCard && cardMap[draft.selectedCard]) selectedCard = draft.selectedCard;
           if (typeof draft.cardContent === 'string') cardContentInput.value = draft.cardContent;
+          if (draft.boxStyle && boxStyles[draft.boxStyle]) selectedBoxStyle = draft.boxStyle;
         } catch (error) {
           console.warn('无法读取草稿', error);
         }
@@ -281,6 +314,8 @@
       }
       const saved = localStorage.getItem('virtualGiftSelectedCD');
       if (saved && cdMap[saved]) selectedCD = saved;
+      const savedStyle = localStorage.getItem('virtualGiftSelectedBoxStyle');
+      if (savedStyle && boxStyles[savedStyle]) selectedBoxStyle = savedStyle;
     }
 
     function updateGenerateState() {
@@ -475,7 +510,8 @@
         items,
         card: placedCard ? placedCard.cardKey : null,
         cardText: placedCard ? placedCard.content : '',
-        cd: placedCD || null
+        cd: placedCD || null,
+        boxStyle: selectedBoxStyle || 'classic'
       };
       return LZString.compressToEncodedURIComponent(JSON.stringify(payload));
     }
@@ -531,6 +567,13 @@
           renderCardPicker();
           updateCardState();
         }
+      });
+    }
+    const openBoxStyleBtn = document.getElementById('changeBoxStyleBtn');
+    if (openBoxStyleBtn) {
+      openBoxStyleBtn.addEventListener('click', () => {
+        saveDraftToStorage();
+        window.location.href = './box.html';
       });
     }
     if (openCdPickerBtn) {
@@ -600,7 +643,8 @@
     // toggle single inner box open/close by swapping image
     let boxOpen = false;
     function syncBoxImages() {
-      if (innerBox) innerBox.src = boxOpen ? './box_open.png' : './box.png';
+      const style = boxStyles[selectedBoxStyle] || boxStyles.classic;
+      if (innerBox) innerBox.src = boxOpen ? style.open : style.closed;
       if (innerBox) innerBox.classList.toggle('open', boxOpen);
     }
 
