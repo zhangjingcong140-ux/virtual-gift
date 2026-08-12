@@ -31,6 +31,9 @@
 
         <div class="card">
           <div class="form-group">
+            <button class="btn small" id="clearBtn" type="button">清空包裹</button>
+          </div>
+          <div class="form-group">
             <label for="sender">寄件人姓名</label>
             <input id="sender" placeholder="请输入寄件人姓名" />
           </div>
@@ -87,10 +90,7 @@
               <button class="btn small" id="copyBtn" type="button">复制</button>
             </div>
             <div style="margin-top:12px;text-align:center;">
-                <div style="display:flex;gap:8px;justify-content:center;align-items:center;">
-                  <button class="btn" id="buildBtn" disabled>生成包裹</button>
-                  <button class="btn small" id="clearBtn" type="button">清空包裹</button>
-                </div>
+                <button class="btn" id="buildBtn" disabled>生成包裹</button>
             </div>
             <div class="qr-wrap">
               <img id="qrCode" alt="礼物二维码" />
