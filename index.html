@@ -31,7 +31,7 @@
 
         <div class="card">
           <div class="form-group">
-            <button class="btn small" id="clearBtn" type="button">清空包裹</button>
+            <button class="btn small" id="clearBtn" type="button">还原包裹</button>
           </div>
           <div class="form-group">
             <label for="sender">寄件人姓名</label>
@@ -221,11 +221,16 @@
       localStorage.setItem('virtualGiftDraft', JSON.stringify(draft));
     }
 
-    function clearPackage() {
+    function restorePackage() {
       state.inside = [];
       placedCard = null;
       placedCD = null;
       selectedCD = null;
+      selectedCard = cardTemplates[0].key;
+      senderInput.value = '';
+      recipientInput.value = '';
+      messageInput.value = '';
+      cardContentInput.value = '';
       hasGenerated = false;
       saveSelectedCDToStorage();
       saveDraftToStorage();
@@ -582,11 +587,11 @@
       }
     });
 
-    const clearBtn = document.getElementById('clearBtn');
-    if (clearBtn) {
-      clearBtn.addEventListener('click', () => {
-        if (!confirm('确定要清空当前包裹吗？此操作不可撤销。')) return;
-        clearPackage();
+    const restoreBtn = document.getElementById('clearBtn');
+    if (restoreBtn) {
+      restoreBtn.addEventListener('click', () => {
+        if (!confirm('是否要还原包裹')) return;
+        restorePackage();
       });
     }
 
