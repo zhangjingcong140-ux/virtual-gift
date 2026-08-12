@@ -87,7 +87,10 @@
               <button class="btn small" id="copyBtn" type="button">复制</button>
             </div>
             <div style="margin-top:12px;text-align:center;">
-              <button class="btn" id="buildBtn" disabled>生成包裹</button>
+                <div style="display:flex;gap:8px;justify-content:center;align-items:center;">
+                  <button class="btn" id="buildBtn" disabled>生成包裹</button>
+                  <button class="btn small" id="clearBtn" type="button">清空包裹</button>
+                </div>
             </div>
             <div class="qr-wrap">
               <img id="qrCode" alt="礼物二维码" />
@@ -216,6 +219,24 @@
         cardContent: cardContentInput.value
       };
       localStorage.setItem('virtualGiftDraft', JSON.stringify(draft));
+    }
+
+    function clearPackage() {
+      state.inside = [];
+      placedCard = null;
+      placedCD = null;
+      selectedCD = null;
+      hasGenerated = false;
+      saveSelectedCDToStorage();
+      saveDraftToStorage();
+      renderObjects();
+      renderPlacedList();
+      updateCardState();
+      syncBoxImages();
+      if (shareUrlInput) {
+        shareUrlInput.value = '请先生成包裹后再显示链接';
+      }
+      if (qrCodeImg) qrCodeImg.removeAttribute('src');
     }
 
     function loadDraftFromStorage() {
@@ -560,6 +581,14 @@
         console.error(error);
       }
     });
+
+    const clearBtn = document.getElementById('clearBtn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        if (!confirm('确定要清空当前包裹吗？此操作不可撤销。')) return;
+        clearPackage();
+      });
+    }
 
     // toggle single inner box open/close by swapping image
     let boxOpen = false;
