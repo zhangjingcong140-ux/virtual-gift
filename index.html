@@ -649,7 +649,9 @@
     }
 
     if (innerBox) {
-      innerBox.addEventListener('click', () => {
+      innerBox.addEventListener('click', (e) => {
+        // respond immediately on single click
+        e.stopPropagation();
         boxOpen = !boxOpen;
         syncBoxImages();
       });
@@ -677,6 +679,8 @@
     renderItemButtons();
     renderObjects();
     renderPlacedList();
+    // ensure box image matches selected style immediately
+    syncBoxImages();
     void createShareLink();
   </script>
 </body>
