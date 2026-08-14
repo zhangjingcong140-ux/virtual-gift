@@ -91,10 +91,6 @@
 
           <div class="share-card">
             <div class="result-title">分享链接</div>
-            <div class="share-row">
-              <input id="shareUrl" readonly value="请先生成包裹后再显示链接" />
-              <button class="btn small" id="copyBtn" type="button">复制</button>
-            </div>
             <div style="margin-top:12px;text-align:center;">
                 <button class="btn" id="buildBtn" disabled>生成包裹</button>
             </div>
@@ -197,7 +193,6 @@
     const recipientInput = document.getElementById('recipient');
     const messageInput = document.getElementById('message');
     const itemList = document.getElementById('itemList');
-    const shareUrlInput = document.getElementById('shareUrl');
     const qrCodeImg = document.getElementById('qrCode');
     const buildBtn = document.getElementById('buildBtn');
     const helperText = document.getElementById('helperText');
@@ -275,9 +270,7 @@
       renderPlacedList();
       updateCardState();
       syncBoxImages();
-      if (shareUrlInput) {
-        shareUrlInput.value = '请先生成包裹后再显示链接';
-      }
+      // share URL removed; clear QR only
       if (qrCodeImg) qrCodeImg.removeAttribute('src');
     }
 
@@ -330,7 +323,6 @@
         ? '填写收件人或选择至少一个小物件后，就可以生成包裹。'
         : '请输入寄件人，或至少选择一个小物件。';
       if (!hasGenerated) {
-        shareUrlInput.value = '请先生成包裹后再显示链接';
         qrCodeImg.removeAttribute('src');
       }
     }
@@ -521,7 +513,6 @@
 
     async function createShareLink() {
       if (!hasGenerated) {
-        shareUrlInput.value = '请先生成包裹后再显示链接';
         qrCodeImg.removeAttribute('src');
         return;
       }
@@ -531,7 +522,6 @@
       url.searchParams.set('d', compressedData);
 
       const finalUrl = url.toString();
-      shareUrlInput.value = finalUrl;
       qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(finalUrl)}`;
       qrCodeImg.alt = '礼物二维码';
     }
@@ -623,17 +613,7 @@
       void createShareLink();
     });
 
-    document.getElementById('copyBtn').addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(shareUrlInput.value);
-        document.getElementById('copyBtn').textContent = '已复制';
-        setTimeout(() => {
-          document.getElementById('copyBtn').textContent = '复制';
-        }, 1200);
-      } catch (error) {
-        console.error(error);
-      }
-    });
+    // copy button removed; sharing now via QR code only
 
     const restoreBtn = document.getElementById('clearBtn');
     if (restoreBtn) {
