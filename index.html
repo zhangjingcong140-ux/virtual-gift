@@ -706,11 +706,7 @@
       wxOverlay.addEventListener('click', hide);
     }
 
-    // show overlay automatically when opened in WeChat
-    if (isWeChat()) {
-      // show after a tiny delay so UI renders first
-      setTimeout(() => showWeChatOverlay(), 600);
-    }
+    // overlay will be shown only when user clicks '传送包裹' (sendBtn)
 
     // wire the send button: generate QR and, if WeChat, show overlay to instruct share
     const sendBtn = document.getElementById('sendBtn');
