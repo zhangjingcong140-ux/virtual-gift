@@ -690,8 +690,7 @@
         const compressed = serializeGiftPayload();
         const url = new URL('receive.html', window.location.href);
         url.searchParams.set('d', compressed);
-        // flag to show WeChat hint only when navigated via this button
-        url.searchParams.set('showWxHint', '1');
+        // no hint flag — overlay removed
         window.location.href = url.toString();
       });
     }

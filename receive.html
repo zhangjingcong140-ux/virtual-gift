@@ -205,11 +205,6 @@
       line-height: 1.6;
       white-space: pre-wrap;
     }
-    /* WeChat hint overlay (only shown when navigated via send button) */
-    .wx-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.64);z-index:9999;display:none;align-items:flex-start;justify-content:flex-end}
-    .wx-overlay .hint{position:relative;margin:24px 18px;padding:12px 14px;background:rgba(255,255,255,0.98);color:#111;border-radius:10px;max-width:260px;text-align:right;font-size:15px;box-shadow:0 8px 24px rgba(0,0,0,0.3)}
-    .wx-overlay .hint svg{display:block;margin-left:auto;margin-bottom:6px}
-    @media (max-width:520px){.wx-overlay .hint{font-size:14px;max-width:200px}}
     .loading-overlay {
       position: absolute;
       inset: 0;
@@ -239,15 +234,7 @@
 </head>
 <body>
   <a href="./index.html" class="top-left-btn">制作包裹</a>
-  <div id="wxOverlay" class="wx-overlay" aria-hidden="true">
-    <div class="hint" role="dialog" aria-modal="true">
-      <svg width="46" height="46" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 20 L20 4" stroke="#d63f63" stroke-width="2" stroke-linecap="round"/>
-        <path d="M14 4h6v6" stroke="#d63f63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <div>请点击右上角三个点进行分享</div>
-    </div>
-  </div>
+  
   <div class="gift-card">
     <div class="gift-title">你收到一份神秘包裹</div>
     <div class="gift-subtitle">点击礼盒，看看里面藏了什么</div>
@@ -418,24 +405,7 @@
           window.giftAudio = new Audio(`./CDs/${window.giftCd}.mp3`);
           window.giftAudio.preload = 'auto';
         }
-        // If navigated from '传送包裹' (showWxHint=1) and inside WeChat, show overlay for 4s
-        try {
-          const showHint = params.get('showWxHint') === '1';
-          const isWeChat = /MicroMessenger/i.test(navigator.userAgent || '');
-          if (showHint && isWeChat) {
-            const overlay = document.getElementById('wxOverlay');
-            if (overlay) {
-              overlay.style.display = 'flex';
-              const hide = () => { overlay.style.display = 'none'; overlay.removeEventListener('click', hide); };
-              overlay.addEventListener('click', hide);
-              // auto-hide after 4 seconds (match loading duration)
-              setTimeout(() => { hide(); }, 4000);
-              overlay.setAttribute('aria-hidden', 'false');
-            }
-          }
-        } catch (e) {
-          console.warn('wx hint failed', e);
-        }
+        
       } catch (error) {
         console.error(error);
         document.getElementById('gift-message').textContent = '包裹内容损坏了~';
