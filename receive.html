@@ -383,7 +383,6 @@
           gift = { sender, recipient, message: legacyText || message || '', style, items, card: cardKey, cardText };
         }
         if (!gift) throw new Error('无法解析包裹信息');
-        if (!gift.sender && gift.recipient && !params.get('to')) gift.sender = gift.recipient;
         document.getElementById('sender-name').textContent = `来自：${gift.sender || '神秘好友'}`;
         document.getElementById('recipient-name').textContent = `致：${gift.recipient || ''}`;
         document.getElementById('gift-message').textContent = '备注：' + (gift.message || '这个包裹里没有写备注。');
