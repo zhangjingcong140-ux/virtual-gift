@@ -9,6 +9,15 @@
   <meta property="og:image" content="https://zhangjingcong140-ux.github.io/virtual-gift/sharecover.png" />
   <link rel="stylesheet" href="./styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+  <style>
+    /* WeChat share overlay styles */
+    .wx-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.64);z-index:9999;display:none;align-items:flex-start;justify-content:flex-end;}
+    .wx-overlay .hint{position:relative;margin:24px 18px;padding:12px 14px;background:rgba(255,255,255,0.98);color:#111;border-radius:10px;max-width:260px;text-align:right;font-size:15px;box-shadow:0 8px 24px rgba(0,0,0,0.3);}
+    .wx-overlay .hint svg{display:block;margin-left:auto;margin-bottom:6px}
+    .share-actions{display:flex;align-items:center;gap:12px;justify-content:center;margin-top:12px}
+    .share-actions .btn.send{background:linear-gradient(180deg,#ff7380,#d63f63);color:#fff;border:none}
+    @media (max-width:520px){.wx-overlay .hint{font-size:14px;max-width:200px}}
+  </style>
 </head>
 <body>
   <div class="container">
@@ -94,8 +103,11 @@
             <div style="margin-top:12px;text-align:center;">
                 <button class="btn" id="buildBtn" disabled>生成包裹</button>
             </div>
-            <div class="qr-wrap">
-              <img id="qrCode" alt="礼物二维码" />
+            <div class="share-actions">
+              <button class="btn send" id="sendBtn" type="button">传送包裹</button>
+              <div class="qr-wrap">
+                <img id="qrCode" alt="礼物二维码" />
+              </div>
             </div>
           </div>
         </div>
@@ -665,6 +677,56 @@
     // ensure box image matches selected style immediately
     syncBoxImages();
     void createShareLink();
+
+    // -- WeChat detection and overlay --
+    function isWeChat() {
+      const ua = navigator.userAgent || '';
+      return /MicroMessenger/i.test(ua);
+    }
+
+    // create overlay element
+    const wxOverlay = document.createElement('div');
+    wxOverlay.id = 'wxOverlay';
+    wxOverlay.className = 'wx-overlay';
+    wxOverlay.innerHTML = `
+      <div class="hint" role="dialog" aria-modal="true">
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 20 L20 4" stroke="#d63f63" stroke-width="2" stroke-linecap="round"/>
+          <path d="M14 4h6v6" stroke="#d63f63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div>请点击右上角三个点进行分享</div>
+      </div>
+    `;
+    document.body.appendChild(wxOverlay);
+
+    function showWeChatOverlay() {
+      wxOverlay.style.display = 'flex';
+      // hide on next tap anywhere on overlay
+      const hide = () => { wxOverlay.style.display = 'none'; wxOverlay.removeEventListener('click', hide); };
+      wxOverlay.addEventListener('click', hide);
+    }
+
+    // show overlay automatically when opened in WeChat
+    if (isWeChat()) {
+      // show after a tiny delay so UI renders first
+      setTimeout(() => showWeChatOverlay(), 600);
+    }
+
+    // wire the send button: generate QR and, if WeChat, show overlay to instruct share
+    const sendBtn = document.getElementById('sendBtn');
+    if (sendBtn) {
+      sendBtn.addEventListener('click', async () => {
+        // ensure QR exists
+        if (!hasGenerated) {
+          document.getElementById('buildBtn').click();
+        } else {
+          await createShareLink();
+        }
+        if (isWeChat()) {
+          showWeChatOverlay();
+        }
+      });
+    }
   </script>
 </body>
 </html>
