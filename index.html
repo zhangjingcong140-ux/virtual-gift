@@ -97,8 +97,9 @@
 
           <div class="share-card">
             <div class="result-title">分享链接</div>
-            <div style="margin-top:12px;text-align:center;">
-                <button class="btn" id="buildBtn" disabled>生成包裹</button>
+            <div style="margin-top:12px;text-align:center;display:flex;gap:10px;justify-content:center;align-items:center;">
+              <button class="btn" id="buildBtn" disabled>生成包裹</button>
+              <button class="btn button-secondary" id="guideBtn" type="button">引导</button>
             </div>
             <div class="share-actions">
               <button class="btn send" id="sendBtn" type="button">传送包裹</button>
@@ -189,6 +190,12 @@
         open: './mcbox_open.png',
         pet: './petmcbox.png'
       }
+      ,
+      giftbox: {
+        closed: './giftbox.png',
+        open: './giftbox_open.png',
+        pet: './petgiftbox.png'
+      }
     };
     const cdMap = Object.fromEntries(cdOptions.map((cd) => [cd.key, cd]));
     const itemMap = Object.fromEntries(
@@ -237,7 +244,15 @@
       } else {
         localStorage.removeItem('virtualGiftSelectedCD');
       }
-    }
+      }
+
+      // guide button navigates to guide page
+      const guideBtn = document.getElementById('guideBtn');
+      if (guideBtn) {
+        guideBtn.addEventListener('click', () => {
+          window.location.href = './guide.html';
+        });
+      }
 
     function saveSelectedBoxStyleToStorage() {
       if (selectedBoxStyle) {
